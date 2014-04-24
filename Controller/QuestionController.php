@@ -39,6 +39,7 @@ namespace UJM\ExoBundle\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\Form\FormBuilder;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 //use Symfony\Component\HttpFoundation\Response;
 
 
@@ -2036,5 +2037,517 @@ class QuestionController extends Controller
         }
         
         return $typeOpen;
+    }
+    
+    /**
+     * 
+     * Edited by :Hamza
+     * ListQuestions
+     *
+     */
+    public function ListQuestion($id)
+    {
+            /**             
+          $listeQuestions = $this->getDoctrine()
+                        ->getManager()
+                        ->getRepository('UJMExoBundle:Question')->findAll();
+          
+                 
+           $livres = $this 
+            ->getDoctrine() 
+            ->getRepository('UJMExoBundle:Question’)->
+          
+          * 
+          * ----
+          *   ->where('u.id = :user_id')
+                    ->setParameter('user_id', $user->getId())
+          
+         $listeQuestions = $this->getDoctrine()
+                            ->getManager()
+                            ->createQueryBuilder()
+                            ->select('intqcm')
+                            ->from('UJMExoBundle:', 'ch')
+                            ->innerJoin('ch.interactionQCM ','intqcm')
+                            ->innerJoin('intqcm .interaction ','int')
+                            ->innerJoin('int.question ','q')
+                            ->getQuery()
+                            ->getResult();
+             * 
+             * 
+             * 
+          */           
+         $id = 3;
+         $Question = $this->getDoctrine()
+                        ->getManager()
+                        ->getRepository('UJMExoBundle:Question')->findBy(array('id' => $id));
+         
+         /**plusiers interactions */
+          $interactions = $this->getDoctrine()
+                        ->getManager()
+                        ->getRepository('UJMExoBundle:Interaction')->findBy(array('question' => $id));
+          
+         /**plusieurs interactions qcm*/
+          $interactionsqcm = $this->getDoctrine()
+                            ->getManager()
+                            ->getRepository('UJMExoBundle:InteractionQCM')->findBy(array('interaction' => $interactions[0]->getId()));
+          
+          $choices2 = $interactionsqcm[0]->getChoices();
+          
+                    /**
+          $choices = $this->getDoctrine()
+                            ->getManager()
+                            ->getRepository('UJMExoBundle:Choice')->findBy(array('interactionQCM' => $interactionsqcm[0]->getId()));
+                       */
+          
+          
+          
+            echo "val id ". $Question[0]->getId()."<br>";
+            echo "count  ". count($interactions)."<br>";
+            echo "count"   .count($interactionsqcm)."<br>";
+            echo "count choices2".count($choices2)."<br>";
+            
+            
+            
+            /*$interactions = $interqcm->getInteraction();
+            echo "count intercations ".count($interactions)."<br>";
+            $questions = $interactions->getquestion();
+            echo "count questions ".count($questions)."<br>";
+            echo "1st question".$questions[0]->get."<br>";*/
+            
+            
+            $Alphabets = array('A','B','C','D','E','F','G','H','I','G','K','L');
+            
+                $document = new \DOMDocument();      
+            // on crée l'élément principal <nouveaute>
+		$node = $document->CreateElement('assessmentItem');
+                $node->setAttribute("identifier", "choice");
+                $node->setAttribute("title",$Question[0]->getTitle());
+                $node->setAttribute("adaptive", "false");
+                $node->setAttribute("timeDependent", "false");
+		$document->appendChild($node);
+ 
+		// on ajoute l'élément <nrnouveaute> a <nouveaute>
+		$responseDeclaration = $document->CreateElement('responseDeclaration');
+                $responseDeclaration->setAttribute("identifier", "RESPONSE");
+                $responseDeclaration->setAttribute("cardinality", "single");
+                $responseDeclaration->setAttribute("baseType", "identifier");
+                $node->appendChild($responseDeclaration);
+                
+                    
+                $correctResponse = $document->CreateElement('correctResponse');
+                $responseDeclaration->appendChild($correctResponse);
+                
+                    
+                
+                /**
+                <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float">
+                        <defaultValue><value>0</value></defaultValue>
+                </outcomeDeclaration>
+                **/
+                
+                $itemBody = $document->CreateElement('itemBody');
+                $node->appendChild($itemBody);
+                
+                $choiceInteraction = $document->CreateElement('choiceInteraction');
+                $choiceInteraction->setAttribute("responseIdentifier", "RESPONSE");
+                $choiceInteraction->setAttribute("shuffle", "false");
+                $choiceInteraction->setAttribute("maxChoices", "1");
+                $itemBody->appendChild($choiceInteraction);
+                
+                $prompt = $document->CreateElement('prompt');
+                $choiceInteraction->appendChild($prompt);
+                $prompttxt =  $document->CreateTextNode($interactions[0]->getInvite());
+		$prompt->appendChild($prompttxt);
+                $i=-1;
+                foreach($choices2 as $ch){
+                    $i++;
+                    if($ch->getRightResponse()== true){
+                            $value = $document->CreateElement('value');
+                            $correctResponse->appendChild($value);
+                            $valuetxt =  $document->CreateTextNode("Choice".$Alphabets[$i]);
+                            $value->appendChild($valuetxt);
+                    }
+                    $simpleChoice = $document->CreateElement('simpleChoice');
+                    $simpleChoice->setAttribute("Identifier", "Choice".$Alphabets[$i]);
+                    $choiceInteraction->appendChild($simpleChoice);
+                    $simpleChoicetxt =  $document->CreateTextNode($ch->getLabel());
+                    $simpleChoice->appendChild($simpleChoicetxt);
+                }
+                
+                    
+                    
+                
+                
+                
+            //$europe = $dom->getElementsByTagName("europe")->item(0);
+            //$europe->appendChild($nouveauPays);
+            /**
+            $dom->construct();
+            $n_selection = $dom->createElement("selection");				
+            $n_interprete = $dom->createElement("interprete");							
+            $nt_interprete = $dom->createTextNode($nomartiste);	
+            $n_interprete->appendChild($nt_interprete);
+            $n_selection = $dom->getElementsByTagName("selection")->item(0);
+            $n_selection->appendChild($n_interprete);
+            $dom->appendChild($n_selection);
+             * 
+            $url    = "/";
+            $html="Testfile.xml";
+            $crawler = new Crawler($html, $url);
+            */
+            
+            $document->save('testfile.xml');
+                 
+                   
+         
+         return $this->render(
+            'UJMExoBundle:Question:ListQuestions.html.twig', array(
+            'Questions' => $Question,
+            )
+        );
+                    
+    }
+    
+    /**
+     * Edited by Hamza
+     * Export an existing Question.
+     *
+     */
+    public function ExportAction($id,$pageNow)
+    {
+         $question = $this->controlUserQuestion($id);
+
+        if (count($question) > 0) {
+
+            $interaction = $this->getDoctrine()
+                ->getManager()
+                ->getRepository('UJMExoBundle:Interaction')
+                ->getInteraction($id);
+
+            $typeInter = $interaction[0]->getType();
+            
+            switch ($typeInter) {
+                case "InteractionQCM":
+                    
+                               $Question = $this->getDoctrine()
+                                             ->getManager()
+                                             ->getRepository('UJMExoBundle:Question')->findBy(array('id' => $id));
+
+                              /**plusiers interactions */
+                               $interactions = $this->getDoctrine()
+                                             ->getManager()
+                                             ->getRepository('UJMExoBundle:Interaction')->findBy(array('question' => $id));
+
+                              /**plusieurs interactions qcm*/
+                               $interactionsqcm = $this->getDoctrine()
+                                                 ->getManager()
+                                                 ->getRepository('UJMExoBundle:InteractionQCM')->findBy(array('interaction' => $interactions[0]->getId()));
+
+                               $choices2 = $interactionsqcm[0]->getChoices();
+
+                               $Alphabets = array('A','B','C','D','E','F','G','H','I','G','K','L');
+
+                               $document = new \DOMDocument();      
+                                 // on crée l'élément principal <Node>
+                                     $node = $document->CreateElement('assessmentItem');
+                                     $node->setAttribute("identifier", "choice");
+                                     $node->setAttribute("title",$Question[0]->getTitle());
+                                     $node->setAttribute("adaptive", "false");
+                                     $node->setAttribute("timeDependent", "false");
+                                     $document->appendChild($node);
+
+                                     // Add the tag <responseDeclaration> to <node>
+                                     $responseDeclaration = $document->CreateElement('responseDeclaration');
+                                     $responseDeclaration->setAttribute("identifier", "RESPONSE");
+                                     $responseDeclaration->setAttribute("cardinality", "single");
+                                     $responseDeclaration->setAttribute("baseType", "identifier");
+                                     $node->appendChild($responseDeclaration);
+                                        
+                                     
+                                     // add the tag <outcomeDeclaration> to the <node>
+                                     $outcomeDeclaration = $document->CreateElement('outcomeDeclaration');
+                                     $outcomeDeclaration->setAttribute("identifier", "SCORE");
+                                     $outcomeDeclaration->setAttribute("cardinality", "single");
+                                     $outcomeDeclaration->setAttribute("baseType", "float");
+                                     $node->appendChild($outcomeDeclaration);
+                                     
+                                     
+                                     //add the tag <Default value> to the item <outcomeDeclaration>
+                                     $defaultValue = $document->CreateElement('defaultValue');
+                                     $outcomeDeclaration->appendChild($defaultValue);
+                                     $value = $document->CreateElement("value");
+                                     $prompttxt =  $document->CreateTextNode("0");
+                                     $value->appendChild($prompttxt);
+                                     $defaultValue->appendChild($value);
+                
+                                     
+
+                                     $correctResponse = $document->CreateElement('correctResponse');
+                                     $responseDeclaration->appendChild($correctResponse);
+
+                                     $itemBody = $document->CreateElement('itemBody');
+                                     $node->appendChild($itemBody);
+
+                                     $choiceInteraction = $document->CreateElement('choiceInteraction');
+                                     $choiceInteraction->setAttribute("responseIdentifier", "RESPONSE");
+                                     if($interactionsqcm[0]->getShuffle()==1){
+                                         $boolval = "True";
+                                     }else $boolval = "false";
+                                     
+                                     $choiceInteraction->setAttribute("shuffle",$boolval);
+                                     $choiceInteraction->setAttribute("maxChoices", "1");
+                                     $itemBody->appendChild($choiceInteraction);
+
+                                     $prompt = $document->CreateElement('prompt');
+                                     $choiceInteraction->appendChild($prompt);
+                                     $prompttxt =  $document->CreateTextNode($interactions[0]->getInvite());
+                                     $prompt->appendChild($prompttxt);
+                                     $i=-1;
+                                     foreach($choices2 as $ch){
+                                         $i++;
+                                         if($ch->getRightResponse()== true){
+                                                 $value = $document->CreateElement('value');
+                                                 $correctResponse->appendChild($value);
+                                                 $valuetxt =  $document->CreateTextNode("Choice".$Alphabets[$i]);
+                                                 $value->appendChild($valuetxt);
+                                         }
+                                         $simpleChoice = $document->CreateElement('simpleChoice');
+                                         $simpleChoice->setAttribute("Identifier", "Choice".$Alphabets[$i]);
+                                         $choiceInteraction->appendChild($simpleChoice);
+                                         $simpleChoicetxt =  $document->CreateTextNode($ch->getLabel());
+                                         $simpleChoice->appendChild($simpleChoicetxt);
+                                     }
+                                 $document->save('testfile.xml');
+                                 
+                                $file = '/var/www/Claroline/web/testfile.xml';                                 
+                
+                                
+
+                    // Search for the ID of the ressource from the Invite colonne 
+                          $txt  = $interactions[0]->getInvite();
+                                $crawler = new Crawler($txt);          
+                        
+                        $path_img="";
+                        if ($crawler->filterXPath('//p/img')->count()>0) {
+                                
+                                $src = $crawler->filterXPath('//p/img')->attr('src');
+                                $id_node= substr($src, 47);
+                               // echo "qst with img => " . $src."<br>";
+                               // echo "idd => " . $id_node."<br>";
+
+                                $resources_file = $this->getDoctrine()
+                                            ->getManager()
+                                            ->getRepository('ClarolineCoreBundle:Resource\File')->findBy(array('resourceNode' => $id_node));
+                                $resources_node = $this->getDoctrine()
+                                            ->getManager()
+                                            ->getRepository('ClarolineCoreBundle:Resource\ResourceNode')->findBy(array('id' => $id_node));
+                                // echo $ressources_file[0]->getHashName();
+
+                                $path_img = $this->container->getParameter('claroline.param.files_directory').'/'.$resources_file[0]->getHashName();
+                
+                        }
+                                    
+                        
+                
+                                //readfile("/var/www/Claroline/web/testfile.xml");
+                    
+                
+                    /*Debut : Code de telechargement des fichiers    
+                    //$hashName = $this->container->get('claroline.utilities.misc')->generateGuid();   
+                    $filename = "testfile.xml";           
+                    $path = $_SERVER['DOCUMENT_ROOT'] . $this->get('request')->getBasePath() . "/" . $filename;
+                    //$content = file_get_contents($path);
+                    if (!file_exists($path)) {
+                         throw $this->createNotFoundException();
+                    }
+                     $response = new BinaryFileResponse($path);
+                     //$response->headers->set('Content-Type', $content->getContentType());     
+                     $response->headers->set('Content-Type', 'application/force-download');
+                     $response->headers->set('Content-Disposition', "attachment; filename=$filename");           
+                     $response->sendHeaders();             
+                     return $response;
+                     //Fin : Code de telechargement des fichiers  */ 
+              
+                    //sfConfig::set('sf_web_debug', false);
+                    $tmpFileName = tempnam("/tmp", "xb_");
+                    $zip = new \ZipArchive();
+                    $zip->open($tmpFileName, \ZipArchive::CREATE);
+                    $zip->addFile("/var/www/Claroline/web/testfile.xml", 'ShemaQTI.xml');
+                    if(!empty($path_img)){
+                         $zip->addFile($path_img, $resources_node[0]->getName());
+                    }
+                    $zip->close();
+                    $response = new BinaryFileResponse($tmpFileName);                    
+                    //$response->headers->set('Content-Type', $content->getContentType());     
+                    $response->headers->set('Content-Type', 'application/application/zip');
+                    $response->headers->set('Content-Disposition', "attachment; filename=QTI-Archive.zip");           
+
+                
+                    return $response;
+                 //  return $this->redirect($this->generateUrl('ujm_question_index', array('pageNow' => $pageNow)));
+                
+                
+                case "InteractionGraphic":
+                     $Question = $this->getDoctrine()
+                                             ->getManager()
+                                             ->getRepository('UJMExoBundle:Question')->findBy(array('id' => $id));
+
+                              
+                     $interactions = $this->getDoctrine()
+                                             ->getManager()
+                                             ->getRepository('UJMExoBundle:Interaction')->findBy(array('question' => $id));
+
+                              
+                     $interactionGraphic = $this->getDoctrine()
+                                                ->getManager()
+                                                ->getRepository('UJMExoBundle:InteractionGraphic')->findBy(array('interaction' => $interactions[0]->getId()));
+                     
+                     $coords = $this->getDoctrine()
+                                                ->getManager()
+                                                ->getRepository('UJMExoBundle:Coords')->findBy(array('interactionGraphic' => $interactionGraphic[0]->getId()));                           
+                     $Documents = $this->getDoctrine()
+                                             ->getManager()                                                                    
+                                             ->getRepository('UJMExoBundle:Document')->findBy(array('id' => $interactionGraphic[0]->getDocument()));
+                     
+                     
+                /*Claculate Radius  and x,y of the center of the circle
+                 * rect: left-x, top-y, right-x, bottom-y.
+                 * circle: center-x, center-y, radius. Note. When the radius value is a percentage value,
+                 */
+                 $Coords_value= $coords[0]->getValue();
+                 $Coords_size = $coords[0]->getSize();
+                 $radius = $Coords_size/2;
+                 list($x, $y) = split('[,]', $Coords_value);
+                 
+                 $x_center_circle=$x + ($radius);
+                 $y_center_circle=$y + ($radius);  
+                 
+                //creation of the XML FIle      
+                     $document = new \DOMDocument(); 
+                     
+                // on crée l'élément principal <Node>
+                    $node = $document->CreateElement('assessmentItem');
+                     
+                   // $node->setAttribute("xsi:schemaLocation", "http://www.imsglobal.org/xsd/qti/qtiv2p1/imsqti_v2p1.xsd");
+                    $node->setAttribute("identifier", "SelectPoint");
+                    $node->setAttribute("title",$Question[0]->getTitle());
+                    $node->setAttribute("adaptive", "false");
+                    $node->setAttribute("timeDependent", "false");
+                    $document->appendChild($node);
+
+                    // Add the tag <responseDeclaration> to <node>
+                    $responseDeclaration = $document->CreateElement('responseDeclaration');
+                    $responseDeclaration->setAttribute("identifier", "RESPONSE");
+                    $responseDeclaration->setAttribute("cardinality", "single");
+                    $responseDeclaration->setAttribute("baseType", "point");
+                    $node->appendChild($responseDeclaration);
+
+                    // add the tag <correctResponse> to the <responseDeclaration>
+                    $correctResponse = $document->createElement("correctResponse");
+                    $Tagvalue = $document->CreateElement("value");
+                    $responsevalue =  $document->CreateTextNode($x_center_circle." ".$y_center_circle);
+                    $Tagvalue->appendChild($responsevalue);
+                    $correctResponse->appendChild($Tagvalue);
+                    $responseDeclaration->appendChild($correctResponse);
+                    
+                    
+                    //add <areaMapping> to <responseDeclaration>
+                    $areaMapping = $document->createElement("areaMapping");
+                    $areaMapping->setAttribute("defaultValue", "0");
+                    $responseDeclaration->appendChild($areaMapping);
+                    
+                    $areaMapEntry =  $document->createElement("areaMapEntry");
+                    $areaMapEntry->setAttribute("shape", $coords[0]->getShape());
+                    $areaMapEntry->setAttribute("coords",$x_center_circle.",".$y_center_circle.",".$radius);
+                    $areaMapEntry->setAttribute("mappedValue", "1");
+                    $areaMapping->appendChild($areaMapEntry);
+                    
+                    //add tag <itemBody>... to <assessmentItem>
+                    $itemBody =$document->createElement("itemBody");
+                    
+                    $selectPointInteraction = $document->createElement("selectPointInteraction");
+                    $selectPointInteraction->setAttribute("responseIdentifier", "RESPONSE");
+                    $selectPointInteraction->setAttribute("maxChoices", "1");
+                    
+                
+                    
+                    
+                    $prompt = $document->CreateElement('prompt');
+                    $prompttxt =  $document->CreateTextNode($interactions[0]->getInvite());
+                    $prompt->appendChild($prompttxt);
+                    $selectPointInteraction->appendChild($prompt);
+                    
+                    $object = $document->CreateElement('object');
+                    $object->setAttribute("type","image/".$Documents[0]->getType());
+                    $object->setAttribute("width",$interactionGraphic[0]->getWidth());
+                    $object->setAttribute("height",$interactionGraphic[0]->getHeight());
+                    $object->setAttribute("data",$Documents[0]->getUrl());
+                    $objecttxt =  $document->CreateTextNode($Documents[0]->getLabel());
+                    $object->appendChild($objecttxt);
+                    $selectPointInteraction->appendChild($object);
+                    
+                    
+                    $itemBody->appendChild($selectPointInteraction);
+                    $node->appendChild($itemBody);
+                    //save xml File
+                    $document->save('testfile.xml');
+                    
+                    /*search for the real path with the real name of the image)
+                    */
+                              
+                    $url = substr($Documents[0]->getUrl(), 1, strlen($Documents[0]->getUrl()));
+                    $nom = explode("/", $url);
+                    
+                    $path=$_SERVER['DOCUMENT_ROOT'].$this->get('request')->getBasePath(). $url;
+                    //create zip file and add the xml file with images...
+                    $tmpFileName = tempnam("/tmp", "xb_");
+                    $zip = new \ZipArchive();
+                    $zip->open($tmpFileName, \ZipArchive::CREATE);
+                    $zip->addFile("/var/www/Claroline/web/testfile.xml", 'QTI-Shema.xml');
+                    if(!empty($path)){
+                            $zip->addFile($path, $nom[count($nom)-1]);
+                    }
+                    $zip->close();
+                    $response = new BinaryFileResponse($tmpFileName);                    
+                    //$response->headers->set('Content-Type', $content->getContentType());     
+                    $response->headers->set('Content-Type', 'application/application/zip');
+                    $response->headers->set('Content-Disposition', "attachment; filename=QTIarchive.zip");           
+
+                
+                    return $response;
+                    
+                    
+                    
+                
+
+                case "InteractionHole":
+                    $interactionHole = $this->getDoctrine()
+                        ->getManager()
+                        ->getRepository('UJMExoBundle:InteractionHole')
+                        ->getInteractionHole($interaction[0]->getId());
+
+                    return $this->forward(
+                        'UJMExoBundle:InteractionHole:delete', array(
+                            'id' => $interactionHole[0]->getId(),
+                            'pageNow' => $pageNow
+                        )
+                    );
+
+                case "InteractionOpen":
+                    $interactionOpen = $this->getDoctrine()
+                    ->getManager()
+                    ->getRepository('UJMExoBundle:InteractionOpen')
+                    ->getInteractionOpen($interaction[0]->getId());
+
+                    return $this->forward(
+                        'UJMExoBundle:InteractionOpen:delete', array(
+                            'id' => $interactionOpen[0]->getId(),
+                            'pageNow' => $pageNow
+                        )
+                    );
+
+                    break;
+            }
+        }
     }
 }

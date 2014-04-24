@@ -10,3 +10,7 @@ ujm_exercise_paper_nav:
     pattern:  /paper/nav/
     defaults: { _controller: "UJMExoBundle:Exercise:exercisePaperNav" }
     requirements: { _method: post }
+    
+ujm_questions_lists:
+    pattern:  /Lists
+    defaults: { _controller: "UJMExoBundle:Question:ListQuestions" }

@@ -166,6 +166,12 @@
                                                 'nbItem': pagerMy.getNbResults, 'lastPage': pagerMy.getNbPages }) }}">
                                                     <i class="icon-trash"></i>
                                                 </a>
+                                                {# ham : Export Question button  #}
+                                                  <a class="btn btn-default" data-toggle="tooltip" title="{{ 'Export' | trans }}" href="{{ path('ujm_question_export', {
+                                                  'id': interaction.question.id, 'pageNow': pagerMy.getCurrentPage }) }}">
+                                                      <i class="icon-save"></i>
+                                                  </a>      
+                                                   {# ham : fin  #}
                                             {% else %}
                                                 <a class="btn btn-default" data-toggle="tooltip" title="{{ 'edit' | trans }}"
                                                    href="{{ path('ujm_question_edit', { 'id': interaction.question.id }) }}"

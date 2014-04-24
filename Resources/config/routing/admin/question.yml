@@ -19,6 +19,11 @@ ujm_question_display_form_type:
     defaults: { _controller: UJMExoBundle:Question:choixFormType }
     requirements:
       _method: POST
+      
+#ham: Export Question to QTI Norme      
+ujm_question_export:
+    pattern:  /{id}/export/{pageNow}
+    defaults: { _controller: UJMExoBundle:Question:export }
 
 ujm_question_share:
   pattern: /share/{questionID}
