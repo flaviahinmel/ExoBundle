@@ -20,10 +20,14 @@ ujm_question_display_form_type:
     requirements:
       _method: POST
       
-#ham: Export Question to QTI Norme      
+#ham:Debut Export Question to QTI Norme      
 ujm_question_export:
     pattern:  /{id}/export/{pageNow}
     defaults: { _controller: UJMExoBundle:Question:export }
+ujm_question_import:
+    pattern:  /import
+    defaults: { _controller: UJMExoBundle:Question:import }
+#ham:Fin Export Question to QTI Norme 
 
 ujm_question_share:
   pattern: /share/{questionID}
