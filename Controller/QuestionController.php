@@ -43,7 +43,7 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\DomCrawler\Crawler;
 
 //use Symfony\Component\HttpFoundation\Response;
-
+use Symfony\Component\HttpFoundation\File\MimeType\MimeTypeGuesser;
 
 use Pagerfanta\Adapter\ArrayAdapter;
 use Pagerfanta\Pagerfanta;
@@ -72,7 +72,7 @@ use UJM\ExoBundle\Entity\Share;
 
 use UJM\ExoBundle\Entity\Response;
 use UJM\ExoBundle\Form\ResponseType;
-
+use Claroline\CoreBundle\Entity\Resource\ResourceNode;
 
 
 use UJM\ExoBundle\Repository\InteractionGraphicRepository;
@@ -2179,7 +2179,7 @@ class QuestionController extends Controller
             $xpath = new \DOMXpath($dom);
             
 
-            // Get all child ul
+            // Get all child 
             $path = '/p/img';
             $imgs = $xpath->query($path);
             echo $imgs->length."<br>";     
@@ -2229,7 +2229,7 @@ class QuestionController extends Controller
             $Alphabets = array('A','B','C','D','E','F','G','H','I','G','K','L');
             
                 $document = new \DOMDocument();      
-            // on crée l'élément principal <nouveaute>
+                // on crée l'élément principal <nouveaute>
 		$node = $document->CreateElement('assessmentItem');
                 $node->setAttribute("identifier", "choice");
                 $node->setAttribute("title",$Question[0]->getTitle());
@@ -2306,12 +2306,28 @@ class QuestionController extends Controller
             $html="Testfile.xml";
             $crawler = new Crawler($html, $url);
             */
-            
+             echo "<br />";
+            echo '=========================change src of img ========================================';
             $document->save('testfile.xml');
-                 
-                   
+            $dom = new \DOMDocument();  
+           
+            $data = '<img src="q_222855.jpg" alt="" />Quand a été crée Mozila Firefox?';
+            $dom->loadHTML($data);
+            $listeimgs = $dom->getElementsByTagName("img");
+            foreach($listeimgs as $img)
+            {
+                echo 'find img';
+              if ($img->hasAttribute("src")) {
+                  echo  " - " . $img->getAttribute("src");
+                  $img->setAttribute("src","newvalue");
+                  
+              }
+              echo "<br />";
+            }     
+            $res = $dom->saveHTML();       
+            echo htmlentities($res);
          
-         return $this->render(
+           return $this->render(
             'UJMExoBundle:Question:ListQuestions.html.twig', array(
             'Questions' => $Question,
             )
@@ -2358,10 +2374,34 @@ class QuestionController extends Controller
                                
                                             // Search for the ID of the ressource from the Invite colonne 
                                                  $txt  = $interactions[0]->getInvite();
-                                                       $crawler = new Crawler($txt);          
+                                                 //$crawler = new Crawler($txt);          
 
                                                $path_img="";
                                                $bool = false;
+                                               
+                                                $dom2 = new \DOMDocument();                  
+                                                $dom2->loadHTML(html_entity_decode($txt));
+                                                $listeimgs = $dom2->getElementsByTagName("img");
+                                                $index = 0;
+                                                foreach($listeimgs as $img)
+                                                {
+                                                  if ($img->hasAttribute("src")) {
+                                                     $src= $img->getAttribute("src");
+                                                      $id_node= substr($src, 47);
+                                                      $resources_file = $this->getDoctrine()
+                                                                   ->getManager()
+                                                                   ->getRepository('ClarolineCoreBundle:Resource\File')->findBy(array('resourceNode' => $id_node));
+                                                       $resources_node = $this->getDoctrine()
+                                                                   ->getManager()
+                                                                   ->getRepository('ClarolineCoreBundle:Resource\ResourceNode')->findBy(array('id' => $id_node));
+                                                       $path_img = $this->container->getParameter('claroline.param.files_directory').'/'.$resources_file[0]->getHashName();
+                                                  }
+                
+                                                }     
+                                                //$res_prompt = $dom2->saveHTML();  
+                                               
+                                               
+                                               /*
                                                if ($crawler->filterXPath('//p/img')->count()>0) {
                                                        $bool = true;        
                                                        $src = $crawler->filterXPath('//p/img')->attr('src');
@@ -2379,7 +2419,7 @@ class QuestionController extends Controller
 
                                                        $path_img = $this->container->getParameter('claroline.param.files_directory').'/'.$resources_file[0]->getHashName();
 
-                                               }
+                                               }*/
 
                                $Alphabets = array('A','B','C','D','E','F','G','H','I','G','K','L');
 
@@ -2723,7 +2763,7 @@ class QuestionController extends Controller
                     }
                     $mapping = $document->createElement("mapping");
                     $mapping->setAttribute("defaultValue", "0");
-                     foreach($ujm_word_response as $resp){
+                    foreach($ujm_word_response as $resp){
                      // add the tag <mapping> to the <responseDeclaration>
                         
                         $mapEntry = $document->createElement("mapEntry");
@@ -2785,7 +2825,6 @@ class QuestionController extends Controller
     }
     Public function generate_imsmanifest_File(){
                     $document = new \DOMDocument(); 
-                     
                     // on crée l'élément principal <Node>
                     $node = $document->CreateElement('manifest');
                     $node->setAttribute("xmlns", "http://www.imsglobal.org/xsd/imscp_v1p1");
@@ -2795,7 +2834,6 @@ class QuestionController extends Controller
                     $node->setAttribute("xsi:schemaLocation", "http://www.imsglobal.org/xsd/imscp_v1p1 imscp_v1p1.xsd http://www.imsglobal.org/xsd/imsmd_v1p2 imsmd_v1p2p4.xsd http://www.imsglobal.org/xsd/imsqti_metadata_v2p1  http://www.imsglobal.org/xsd/qti/qtiv2p1/imsqti_metadata_v2p1.xsd"); 
 
                     $document->appendChild($node);
-                    
                     // Add the tag <responseDeclaration> to <node>
                     $metadata = $document->CreateElement('metadata');
                     $node->appendChild($metadata); 
@@ -2852,181 +2890,469 @@ class QuestionController extends Controller
                   if ((($_FILES["f1"]["type"] == "text/xml")) && ($_FILES["f1"]["size"] < 20000000) && in_array($extension, $allowedExts)) {
 
 
-                    if ($_FILES["f1"]["error"] > 0) {
-                      $rst =$rst . "Return Code: " . $_FILES["f1"]["error"] . "<br/>";
-                    } else {
-                      $rst =$rst . "File: " . $_FILES["f1"]["name"] . "\n";
-                      $rst =$rst . "Type: " . $_FILES["f1"]["type"] . "\n";
-                      $rst =$rst . "Size: " . ($_FILES["f1"]["size"] / 1024) . " kB\n";
-                      if (file_exists("upload/" . $_FILES["f1"]["name"])) {
-                        $rst =$rst . $_FILES["f1"]["name"] . " already exists. ";
-                      } else {
-                        move_uploaded_file($_FILES["f1"]["tmp_name"],
-                        "/var/www/Claroline/web/uploadfiles/" . $_FILES["f1"]["name"]);
-                        $rst =$rst . "Stored in: " . "uploadfiles/" . $_FILES["f1"]["name"];
-                      }
-                    }
+                                if ($_FILES["f1"]["error"] > 0) {
+                                  $rst =$rst . "Return Code: " . $_FILES["f1"]["error"] . "<br/>";
+                                } else {
+                                  $rst =$rst . "File: " . $_FILES["f1"]["name"] . "\n";
+                                  $rst =$rst . "Type: " . $_FILES["f1"]["type"] . "\n";
+                                  $rst =$rst . "Size: " . ($_FILES["f1"]["size"] / 1024) . " kB\n";
+                                  if (file_exists("upload/" . $_FILES["f1"]["name"])) {
+                                    $rst =$rst . $_FILES["f1"]["name"] . " already exists. ";
+                                  } else {
+                                    move_uploaded_file($_FILES["f1"]["tmp_name"],
+                                    "/var/www/Claroline/web/uploadfiles/" . $_FILES["f1"]["name"]);
+                                    $rst =$rst . "Stored in: " . "uploadfiles/" . $_FILES["f1"]["name"];
+                                  }
+                                }
+                    
+                                //import xml file
+                                $file = "/var/www/Claroline/web/uploadfiles/".$_FILES["f1"]["name"];
+                                $document_xml = new \DomDocument();
+                                $document_xml->load($file);
+                                $elements = $document_xml->getElementsByTagName('assessmentItem');
+                                $element = $elements->item(0); // On obtient le nœud assessmentItem
+                                //$childs = $element->childNodes;  
+                                if ($element->hasAttribute("title")) {
+                                    $title = $element->getAttribute("title");
+                                }
+                                //get the type of the QCM choiceMultiple or choice
+                                $typeqcm = $element->getAttribute("identifier");
+
+                                //Import for Question QCM 
+                                if($typeqcm=="choiceMultiple" || $typeqcm=="choice" ){
+                                            $nodeList=$element->getElementsByTagName("responseDeclaration");
+                                            $responseDeclaration=($nodeList->item(0));
+                                            $nodeList2=$responseDeclaration->getElementsByTagName("correctResponse");
+                                            $correctResponse=$nodeList2->item(0);
+                                            $nodelist3 = $correctResponse->getElementsByTagName("value");
+
+                                            //array correct choices 
+                                            $correctchoices = new \Doctrine\Common\Collections\ArrayCollection;
+
+                                            foreach($nodelist3 as $value)  
+                                            {
+                                                $valeur = $value->nodeValue."\n";
+                                                $correctchoices->add($valeur);
+                                                //$rst =$rst."--------value : ".$valeur."\n";
+                                            }
+
+                                            $nodeList=$element->getElementsByTagName("outcomeDeclaration");
+                                            $responseDeclaration=($nodeList->item(0));
+                                            $nodeList2=$responseDeclaration->getElementsByTagName("defaultValue");
+                                            $correctResponse=$nodeList2->item(0);
+                                            $nodelist3 = $correctResponse->getElementsByTagName("value");
+
+                                            foreach($nodelist3 as $score)  
+                                            {
+                                                $valeur = $score->nodeValue."\n";
+                                                $rst =$rst."--------score : ".$valeur."\n";
+                                            }
+
+                                            $nodeList=$element->getElementsByTagName("itemBody");
+                                            $itemBody=($nodeList->item(0));
+                                            $nodeList2=$itemBody->getElementsByTagName("choiceInteraction");
+                                            $choiceInteraction=$nodeList2->item(0);
+                                            //question
+                                            $prompt = $choiceInteraction->getElementsByTagName("prompt")->item(0)->nodeValue;
+                                            //$rst =$rst."--------prompt : ".$prompt."\n";
+
+
+
+                                            //array correct choices 
+                                            $choices = new \Doctrine\Common\Collections\ArrayCollection;
+                                            $identifier_choices = new \Doctrine\Common\Collections\ArrayCollection;
+
+                                            $nodeList3=$choiceInteraction->getElementsByTagName("simpleChoice");
+                                            foreach($nodeList3 as $simpleChoice)  
+                                            {
+                                                $choices->add($simpleChoice->nodeValue);
+                                                $identifier_choices->add($simpleChoice->getAttribute("identifier"));
+                                                //$rst =$rst."--------Choice : ".$valeur."\n";
+                                                //$identifier = 
+                                                //$rst =$rst."--------identifier ".$identifier."\n";
+                                            }
+
+
+                                            //add the question o the database : 
+
+                                            $question  = new Question();
+                                            $Category = new Category();
+                                            $interaction =new Interaction();
+                                            $interactionqcm =new InteractionQCM();
+
+
+
+
+                                            //question & category
+                                            $question->setTitle($title);
+                                            //check if the Category "Import" exist --else-- will create it
+                                            $Category_import = $this->getDoctrine()
+                                                                 ->getManager()
+                                                                 ->getRepository('UJMExoBundle:Category')->findBy(array('value' => "import"));
+                                            if(count($Category_import)==0){
+                                                $Category->setValue("import");
+                                                $Category->setUser($this->container->get('security.context')->getToken()->getUser());
+                                                $question->setCategory($Category); 
+                                            }else{
+                                                $question->setCategory($Category_import[0]);
+                                            }
+
+
+                                            $question->setUser($this->container->get('security.context')->getToken()->getUser());
+                                            $date = new \Datetime();
+                                            $question->setDateCreate(new \Datetime());
+
+
+
+                                            //Interaction
+
+                                            $interaction->setType('InteractionQCM');
+                                            $interaction->setInvite($prompt);
+                                            $interaction->setQuestion($question);
+
+
+
+
+
+
+
+                                            $em = $this->getDoctrine()->getManager();
+
+
+                                            $ord=1;
+                                            $index =0;
+                                            foreach ($choices as $choix) {
+                                                //choices 
+                                                $choice1 = new Choice();
+                                                $choice1->setLabel($choix);
+                                                $choice1->setOrdre($ord);
+                                                foreach ($correctchoices as $corrvalue) {
+                                                    $rst= $rst."------------".$identifier_choices[$index]."*--------------------".$corrvalue;
+                                                    if(strtolower(trim($identifier_choices[$index])) == strtolower(trim($corrvalue))){
+                                                        $rst= $rst."***********".$identifier_choices[$index]."***********".$corrvalue;
+                                                        $choice1->setRightResponse(TRUE);
+                                                    }
+                                                }
+                                                $interactionqcm->addChoice($choice1);
+                                                $em->persist($choice1);
+                                                $ord=$ord+1;
+                                                $index=$index+1;
+                                            }
+                                            //InteractionQCM
+                                            $type_qcm = $this->getDoctrine()
+                                                        ->getManager()
+                                                        ->getRepository('UJMExoBundle:TypeQCM')->findAll();
+                                            if($typeqcm=="choice"){
+                                                $interactionqcm->setTypeQCM($type_qcm[1]);
+                                            }else{
+                                                $interactionqcm->setTypeQCM($type_qcm[0]);
+                                            }
+                                            $interactionqcm->setInteraction($interaction);
+
+
+                                            $em->persist($interactionqcm);
+                                            $em->persist($interactionqcm->getInteraction()->getQuestion());
+                                            $em->persist($interactionqcm->getInteraction());
+
+                                            if(count($Category_import)==0){
+                                            $em->persist($Category);
+                                            }
+                                                //echo($choice->getRightResponse());
+
+
+                                            $em->flush();
+                                }  
+                            
                   } else {
                     $rst =$rst . "Invalid file";
                   }  
-                $rst = $rst . dirname(__FILE__).'/'."\n"; 
-                  
-                $file = "/var/www/Claroline/web/uploadfiles/".$_FILES["f1"]["name"];
-                $document_xml = new \DomDocument();
-                $document_xml->load($file);
-                $elements = $document_xml->getElementsByTagName('assessmentItem');
-                $element = $elements->item(0); // On obtient le nœud assessmentItem
-                //$childs = $element->childNodes;  
-                if ($element->hasAttribute("title")) {
-                    $title = $element->getAttribute("title");
-                }
-                //get the type of the QCM choiceMultiple or choice
-                $typeqcm = $element->getAttribute("identifier");
-                
-                //Import for Question QCM 
-                if($typeqcm=="choiceMultiple" || $typeqcm=="choice" ){
-                            $nodeList=$element->getElementsByTagName("responseDeclaration");
-                            $responseDeclaration=($nodeList->item(0));
-                            $nodeList2=$responseDeclaration->getElementsByTagName("correctResponse");
-                            $correctResponse=$nodeList2->item(0);
-                            $nodelist3 = $correctResponse->getElementsByTagName("value");
+                    $rst = $rst . dirname(__FILE__).'/'."\n"; 
+                    
+                   //if it's QTI zip file  --> unzip the file into this path "/var/www/Claroline/web/uploadfiles/" --> add to the database the resources (images)       
+                  if(($_FILES["f1"]["type"] == "application/zip") && ($_FILES["f1"]["size"] < 20000000)){
+                      $rst = 'its a zip file';
+                      move_uploaded_file($_FILES["f1"]["tmp_name"],
+                                "/var/www/Claroline/web/uploadfiles/" . $_FILES["f1"]["name"]);
+                      $zip = new \ZipArchive;
+                      $zip->open("/var/www/Claroline/web/uploadfiles/" . $_FILES["f1"]["name"]);
+                      $res= zip_open("/var/www/Claroline/web/uploadfiles/" . $_FILES["f1"]["name"]);
+                      
+                      $zip->extractTo("/var/www/Claroline/web/uploadfiles/" );
+                      $tab_liste_fichiers = array();
+                      while ($zip_entry = zip_read($res)) //Pour chaque fichier contenu dans le fichier zip 
+                        { 
+                            if(zip_entry_filesize($zip_entry) > 0) 
+                            { 
+                                $nom_fichier = zip_entry_name($zip_entry);
+                                $rst =$rst . '-_-_-_'.$nom_fichier;
+                                array_push($tab_liste_fichiers,$nom_fichier); 
 
-                            //array correct choices 
-                            $correctchoices = new \Doctrine\Common\Collections\ArrayCollection;
-
-                            foreach($nodelist3 as $value)  
-                            {
-                                $valeur = $value->nodeValue."\n";
-                                $correctchoices->add($valeur);
-                                //$rst =$rst."--------value : ".$valeur."\n";
                             }
+                        }
+                        
+                      $zip->close(); 
 
-                            $nodeList=$element->getElementsByTagName("outcomeDeclaration");
-                            $responseDeclaration=($nodeList->item(0));
-                            $nodeList2=$responseDeclaration->getElementsByTagName("defaultValue");
-                            $correctResponse=$nodeList2->item(0);
-                            $nodelist3 = $correctResponse->getElementsByTagName("value");
+                        //creation of the ResourceNode & File for the images...
+                        $user= $this->container->get('security.context')->getToken()->getUser();
+                        $workspace = $this->getDoctrine()->getManager()->getRepository('ClarolineCoreBundle:Workspace\AbstractWorkspace')->findBy(array('creator' => $user->getId()));
+                        //$directory = $this->getReference("directory/{$this->directory}");
+                        //$directory = $this->get('claroline.manager.resource_manager');
+                        $resourceManager = $this->container->get('claroline.manager.resource_manager');
+                        $filesDirectory = $this->container->getParameter('claroline.param.files_directory');
+                        $ut = $this->container->get('claroline.utilities.misc');
+                        $fileType = $this->getDoctrine()->getManager()->getRepository('ClarolineCoreBundle:Resource\ResourceType')->findOneByName('file');
+                        $rst =$rst .'---wrkspace----'.$workspace[0]->getName().'-------------';
 
-                            foreach($nodelist3 as $score)  
-                            {
-                                $valeur = $score->nodeValue."\n";
-                                $rst =$rst."--------score : ".$valeur."\n";
-                            }
+                        foreach ($tab_liste_fichiers as $filename) {
 
-                            $nodeList=$element->getElementsByTagName("itemBody");
-                            $itemBody=($nodeList->item(0));
-                            $nodeList2=$itemBody->getElementsByTagName("choiceInteraction");
-                            $choiceInteraction=$nodeList2->item(0);
-                            //question
-                            $prompt = $choiceInteraction->getElementsByTagName("prompt")->item(0)->nodeValue;
-                            //$rst =$rst."--------prompt : ".$prompt."\n";
+                            //filepath contain the path of the files in the extraction palce "uploadfile"
+                            $filePath = "/var/www/Claroline/web/uploadfiles/".$filename;
+                            $filePathParts = explode(DIRECTORY_SEPARATOR, $filePath);
+                            //file name of the file
+                            $fileName = array_pop($filePathParts);
+                            //extension of the file
+                            $extension = pathinfo($filePath, PATHINFO_EXTENSION);
+                            $hashName = "{$ut->generateGuid()}.{$extension}";
 
+                            $targetFilePath = $filesDirectory . DIRECTORY_SEPARATOR . $hashName;
+                            //$directory = $this->getReference($filesDirectory);
 
+                            $file = new \Claroline\CoreBundle\Entity\Resource\File();
+                            $file->setName($fileName);
+                            $file->setHashName($hashName);
 
-                            //array correct choices 
-                            $choices = new \Doctrine\Common\Collections\ArrayCollection;
-                            $identifier_choices = new \Doctrine\Common\Collections\ArrayCollection;
-
-                            $nodeList3=$choiceInteraction->getElementsByTagName("simpleChoice");
-                            foreach($nodeList3 as $simpleChoice)  
-                            {
-                                $choices->add($simpleChoice->nodeValue);
-                                $identifier_choices->add($simpleChoice->getAttribute("identifier"));
-                                //$rst =$rst."--------Choice : ".$valeur."\n";
-                                //$identifier = 
-                                //$rst =$rst."--------identifier ".$identifier."\n";
-                            }
-
-
-                            //add the question o the database : 
-
-                            $question  = new Question();
-                            $Category = new Category();
-                            $interaction =new Interaction();
-                            $interactionqcm =new InteractionQCM();
-
-
-
-
-                            //question & category
-                            $question->setTitle($title);
-                            //check if the Category "Import" exist --else-- will create it
-                            $Category_import = $this->getDoctrine()
-                                                 ->getManager()
-                                                 ->getRepository('UJMExoBundle:Category')->findBy(array('value' => "import"));
-                            if(count($Category_import)==0){
-                                $Category->setValue("import");
-                                $Category->setUser($this->container->get('security.context')->getToken()->getUser());
-                                $question->setCategory($Category);
-                            }else{
-                                $question->setCategory($Category_import[0]);
-                            }
-                            
-                            
-                            $question->setUser($this->container->get('security.context')->getToken()->getUser());
-                            $date = new \Datetime();
-                            $question->setDateCreate(new \Datetime());
-
-
-
-                            //Interaction
-
-                            $interaction->setType('InteractionQCM');
-                            $interaction->setInvite($prompt);
-                            $interaction->setQuestion($question);
-
-
-
-
-
-
-
-                            $em = $this->getDoctrine()->getManager();
-
-
-                            $ord=1;
-                            $index =0;
-                            foreach ($choices as $choix) {
-                                //choices 
-                                $choice1 = new Choice();
-                                $choice1->setLabel($choix);
-                                $choice1->setOrdre($ord);
-                                foreach ($correctchoices as $corrvalue) {
-                                    $rst= $rst."------------".$identifier_choices[$index]."*--------------------".$corrvalue;
-                                    if(strtolower(trim($identifier_choices[$index])) == strtolower(trim($corrvalue))){
-                                        $rst= $rst."***********".$identifier_choices[$index]."***********".$corrvalue;
-                                        $choice1->setRightResponse(TRUE);
-                                    }
+                            $rst =$rst . '-_-hashname_-_'.$hashName.'--extention---'.$extension.'--targetFilePath---'.$targetFilePath;    
+                            if(($extension=='jpg')||($extension=='jpeg')||($extension=='gif')){
+                                if (file_exists($filePath)) {
+                                    copy($filePath, $targetFilePath);
+                                    $file->setSize(filesize($filePath));
+                                } else {
+                                    touch($targetFilePath);
+                                    $file->setSize(0);
                                 }
-                                $interactionqcm->addChoice($choice1);
-                                $em->persist($choice1);
-                                $ord=$ord+1;
-                                $index=$index+1;
+                                $mimeType = MimeTypeGuesser::getInstance()->guess($targetFilePath);
+                                $rst =$rst . '-_-MimeTypeGuesser-_'.$mimeType;
+                                $file->setMimeType($mimeType);
+
+                                //creation ressourcenode
+    //                            $node = new ResourceNode();
+    //                            $node->setResourceType($fileType);
+    //                            $node->setCreator($user);
+    //                            $node->setWorkspace($workspace[0]);
+    //                            $node->setCreationDate(new \Datetime());
+    //                            $node->setClass('Claroline\CoreBundle\Entity\Resource\File');
+    //                            $node->setName($workspace[0]->getName());
+    //                            $node->setMimeType($mimeType);
+
+                               // $file->setResourceNode($node);
+
+                                //$this->getDoctrine()->getManager()->persist($node);
+                                $role = $this
+                                            ->getDoctrine()
+                                            ->getRepository('ClarolineCoreBundle:Role')
+                                            ->findManagerRole($workspace[0]);
+                                $rigths = array(
+                                     'ROLE_WS_MANAGER' => array('open' => true, 'export' => true, 'create' => array(),
+                                                                'role' => $role
+                                                               )
+                                );
+                                //echo 'ws : '.$user->getPersonalWorkspace()->getName();die();
+                                $parent = $this
+                                            ->getDoctrine()
+                                            ->getRepository('ClarolineCoreBundle:Resource\ResourceNode')
+                                            ->findWorkspaceRoot($user->getPersonalWorkspace());
+
+                                $resourceManager->create($file, $fileType, $user, $user->getPersonalWorkspace(), $parent, NULL, $rigths);// ,$node);
+                                    //list of the Resource ID Node that already craeted
+                                     $liste_resource_idnode = array();
+                                     array_push($liste_resource_idnode,$file->getResourceNode()->getId()); 
+                                   
                             }
-                            //InteractionQCM
-                            $type_qcm = $this->getDoctrine()
-                                        ->getManager()
-                                        ->getRepository('UJMExoBundle:TypeQCM')->findAll();
-                            if($typeqcm=="choice"){
-                                $interactionqcm->setTypeQCM($type_qcm[1]);
-                            }else{
-                                $interactionqcm->setTypeQCM($type_qcm[0]);
-                            }
-                            $interactionqcm->setInteraction($interaction);
+                        }
+                         //$file->getResourceNode()->getId()  ;die();
+                        $this->getDoctrine()->getManager()->flush();  
+                        
+                            
+                        //Import for Question QCM --> from unZip File --> Type choiceMultiple Or  choice
+                        //import xml file
+                                $file = "/var/www/Claroline/web/uploadfiles/ShemaQTI.xml";
+                                $document_xml = new \DomDocument();
+                                $document_xml->load($file);
+                                $elements = $document_xml->getElementsByTagName('assessmentItem');
+                                $element = $elements->item(0); // On obtient le nœud assessmentItem
+                                //$childs = $element->childNodes;  
+                                if ($element->hasAttribute("title")) {
+                                    $title = $element->getAttribute("title");
+                                }
+                                //get the type of the QCM choiceMultiple or choice
+                                $typeqcm = $element->getAttribute("identifier");
+                                
+                                if($typeqcm=="choiceMultiple" || $typeqcm=="choice" ){
+                                            $nodeList=$element->getElementsByTagName("responseDeclaration");
+                                            $responseDeclaration=($nodeList->item(0));
+                                            $nodeList2=$responseDeclaration->getElementsByTagName("correctResponse");
+                                            $correctResponse=$nodeList2->item(0);
+                                            $nodelist3 = $correctResponse->getElementsByTagName("value");
+
+                                            //array correct choices 
+                                            $correctchoices = new \Doctrine\Common\Collections\ArrayCollection;
+
+                                            foreach($nodelist3 as $value)  
+                                            {
+                                                $valeur = $value->nodeValue."\n";
+                                                $correctchoices->add($valeur);
+                                                //$rst =$rst."--------value : ".$valeur."\n";
+                                            }
+
+                                            $nodeList=$element->getElementsByTagName("outcomeDeclaration");
+                                            $responseDeclaration=($nodeList->item(0));
+                                            $nodeList2=$responseDeclaration->getElementsByTagName("defaultValue");
+                                            $correctResponse=$nodeList2->item(0);
+                                            $nodelist3 = $correctResponse->getElementsByTagName("value");
+
+                                            foreach($nodelist3 as $score)  
+                                            {
+                                                $valeur = $score->nodeValue."\n";
+                                                $rst =$rst."--------score : ".$valeur."\n";
+                                            }
+
+                                            $nodeList=$element->getElementsByTagName("itemBody");
+                                            $itemBody=($nodeList->item(0));
+                                            $nodeList2=$itemBody->getElementsByTagName("choiceInteraction");
+                                            $choiceInteraction=$nodeList2->item(0);
+                                            //question
+                                            $prompt = $choiceInteraction->getElementsByTagName("prompt")->item(0)->nodeValue;
+                                            //change the src of the image :by using this path with integrating the resourceIdNode "/Claroline/web/app_dev.php/file/resource/media/5"
+                                                            $dom2 = new \DOMDocument();                  
+                                                            $dom2->loadHTML(html_entity_decode($prompt));
+                                                            $listeimgs = $dom2->getElementsByTagName("img");
+                                                            $index = 0;
+                                                            foreach($listeimgs as $img)
+                                                            {
+                                                              if ($img->hasAttribute("src")) {
+                                                                  $img->setAttribute("src","/Claroline/web/app_dev.php/file/resource/media/".$liste_resource_idnode[$index]);
+                                                              }
+                                                             $index= $index +1;
+                                                            }     
+                                                            $res_prompt = $dom2->saveHTML();       
+                                                           // echo htmlentities($res);
+                                            //$rst =$rst."--------prompt : ".$prompt."\n";
 
 
-                            $em->persist($interactionqcm);
-                            $em->persist($interactionqcm->getInteraction()->getQuestion());
-                            $em->persist($interactionqcm->getInteraction());
 
-                            if(count($Category_import)==0){
-                            $em->persist($Category);
-                            }
-                                //echo($choice->getRightResponse());
+                                            //array correct choices 
+                                            $choices = new \Doctrine\Common\Collections\ArrayCollection;
+                                            $identifier_choices = new \Doctrine\Common\Collections\ArrayCollection;
+
+                                            $nodeList3=$choiceInteraction->getElementsByTagName("simpleChoice");
+                                            foreach($nodeList3 as $simpleChoice)  
+                                            {
+                                                $choices->add($simpleChoice->nodeValue);
+                                                $identifier_choices->add($simpleChoice->getAttribute("identifier"));
+                                                //$rst =$rst."--------Choice : ".$valeur."\n";
+                                                //$identifier = 
+                                                //$rst =$rst."--------identifier ".$identifier."\n";
+                                            }
 
 
-                            $em->flush();
-                }              
+                                            //add the question o the database : 
+
+                                            $question  = new Question();
+                                            $Category = new Category();
+                                            $interaction =new Interaction();
+                                            $interactionqcm =new InteractionQCM();
+
+
+
+
+                                            //question & category
+                                            $question->setTitle($title);
+                                            //check if the Category "Import" exist --else-- will create it
+                                            $Category_import = $this->getDoctrine()
+                                                                 ->getManager()
+                                                                 ->getRepository('UJMExoBundle:Category')->findBy(array('value' => "import"));
+                                            
+                                            if(count($Category_import)==0){
+                                                $Category->setValue("import");
+                                                $Category->setUser($this->container->get('security.context')->getToken()->getUser());
+                                                $question->setCategory($Category); 
+                                            }else{
+                                                $question->setCategory($Category_import[0]);
+                                            }
+
+
+                                            $question->setUser($this->container->get('security.context')->getToken()->getUser());
+                                            $date = new \Datetime();
+                                            $question->setDateCreate(new \Datetime());
+
+
+
+                                            //Interaction
+
+                                            $interaction->setType('InteractionQCM');
+                                            //strip_tags($res_prompt,'<img><a><p><table>')
+                                            $interaction->setInvite(($res_prompt));
+                                            $interaction->setQuestion($question);
+
+
+
+
+
+
+
+                                            $em = $this->getDoctrine()->getManager();
+
+
+                                            $ord=1;
+                                            $index =0;
+                                            foreach ($choices as $choix) {
+                                                //choices 
+                                                $choice1 = new Choice();
+                                                $choice1->setLabel($choix);
+                                                $choice1->setOrdre($ord);
+                                                foreach ($correctchoices as $corrvalue) {
+                                                    $rst= $rst."------------".$identifier_choices[$index]."*--------------------".$corrvalue;
+                                                    if(strtolower(trim($identifier_choices[$index])) == strtolower(trim($corrvalue))){
+                                                        $rst= $rst."***********".$identifier_choices[$index]."***********".$corrvalue;
+                                                        $choice1->setRightResponse(TRUE);
+                                                    }
+                                                }
+                                                $interactionqcm->addChoice($choice1);
+                                                $em->persist($choice1);
+                                                $ord=$ord+1;
+                                                $index=$index+1;
+                                            }
+                                            //InteractionQCM
+                                            $type_qcm = $this->getDoctrine()
+                                                        ->getManager()
+                                                        ->getRepository('UJMExoBundle:TypeQCM')->findAll();
+                                            if($typeqcm=="choice"){
+                                                $interactionqcm->setTypeQCM($type_qcm[1]);
+                                            }else{
+                                                $interactionqcm->setTypeQCM($type_qcm[0]);
+                                            }
+                                            $interactionqcm->setInteraction($interaction);
+
+
+                                            $em->persist($interactionqcm);
+                                            $em->persist($interactionqcm->getInteraction()->getQuestion());
+                                            $em->persist($interactionqcm->getInteraction());
+
+                                            if(count($Category_import)==0){
+                                            $em->persist($Category);
+                                            }
+                                                //echo($choice->getRightResponse());
+
+
+                                            $em->flush();
+                                }
+                    
+                    
+                  }
+                  
+                  
+                  
+                            
                
                 
                 
