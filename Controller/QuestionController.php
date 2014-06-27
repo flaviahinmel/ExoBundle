@@ -50,7 +50,7 @@ use Pagerfanta\Pagerfanta;
 
 use UJM\ExoBundle\Entity\Question;
 use UJM\ExoBundle\Entity\Category;
-
+use UJM\ExoBundle\Entity\Coords;
 
 use UJM\ExoBundle\Entity\Choice;
 use UJM\ExoBundle\Form\QuestionType;
@@ -73,7 +73,7 @@ use UJM\ExoBundle\Entity\Share;
 use UJM\ExoBundle\Entity\Response;
 use UJM\ExoBundle\Form\ResponseType;
 use Claroline\CoreBundle\Entity\Resource\ResourceNode;
-
+use UJM\ExoBundle\Entity\Document;
 
 use UJM\ExoBundle\Repository\InteractionGraphicRepository;
 /**
@@ -2342,7 +2342,7 @@ class QuestionController extends Controller
      */
     public function ExportAction($id,$pageNow)
     {
-         $question = $this->controlUserQuestion($id);
+        $question = $this->controlUserQuestion($id);
 
         if (count($question) > 0) {
 
@@ -2373,7 +2373,7 @@ class QuestionController extends Controller
                                $choices2 = $interactionsqcm[0]->getChoices();
                                
                                             // Search for the ID of the ressource from the Invite colonne 
-                                                 $txt  = $interactions[0]->getInvite();
+                                               $txt  = $interactions[0]->getInvite();
                                                  //$crawler = new Crawler($txt);          
 
                                                $path_img="";
@@ -2483,15 +2483,17 @@ class QuestionController extends Controller
                                         
                                         //Code pour eliminer du code html sauf la balise img
                                         $res1 =strip_tags($interactions[0]->getInvite(), '<img>');
-                                        if($bool==true){
+                                        if(!empty($path_img)){
                                             //expression regulière pour eliminer tous les attributs des balises         
                                             $reg="#(?<=\<img)\s*[^>]*(?=>)#";
                                             $res1=preg_replace($reg,"",$res1);   
                                             //rajouter src de l'image
                                             $res1= str_replace("<img>", "<img src=\"".$resources_node[0]->getName()."\" alt=\"\" />",$res1);
+                                            //generate the mannifest file
+                                            $this->generate_imsmanifest_File($resources_node[0]->getName());
                                         }
                                         
-
+                                            
                                      $prompttxt =  $document->CreateTextNode(html_entity_decode($res1));
                                      $prompt->appendChild($prompttxt);
                                      $i=-1;
@@ -2516,8 +2518,7 @@ class QuestionController extends Controller
                                 
 
                     
-                     //generate the mannifest file
-                     $this->generate_imsmanifest_File();
+                     
                      //   
                 
                                 //readfile("/var/www/Claroline/web/testfile.xml");
@@ -2666,14 +2667,16 @@ class QuestionController extends Controller
                     $node->appendChild($itemBody);
                     //save xml File
                     $document->save('testfile.xml');
-                    //generate tne mannifest file
-                    $this->generate_imsmanifest_File();
+                    
                     
                     /*search for the real path with the real name of the image)
                     */
-                              
                     $url = substr($Documents[0]->getUrl(), 1, strlen($Documents[0]->getUrl()));
                     $nom = explode("/", $url);
+                    
+                    //generate tne mannifest file
+                    $this->generate_imsmanifest_File($nom[count($nom)-1]);
+                    //
                     
                     $path=$_SERVER['DOCUMENT_ROOT'].$this->get('request')->getBasePath(). $url;
                     //create zip file and add the xml file with images...
@@ -2823,7 +2826,7 @@ class QuestionController extends Controller
             }
         }
     }
-    Public function generate_imsmanifest_File(){
+    Public function generate_imsmanifest_File($namefile){
                     $document = new \DOMDocument(); 
                     // on crée l'élément principal <Node>
                     $node = $document->CreateElement('manifest');
@@ -2864,7 +2867,7 @@ class QuestionController extends Controller
                     
                     $file2 = $document->CreateElement('file');
                     //the name of the image must be variable ....
-                    $file2->setAttribute("href","images/q_222855.jpg");
+                    $file2->setAttribute("href","images/".$namefile);
                     $resource->appendChild($file2);
                     
                     $document->save('imsmanifest.xml');
@@ -3070,6 +3073,7 @@ class QuestionController extends Controller
                     
                    //if it's QTI zip file  --> unzip the file into this path "/var/www/Claroline/web/uploadfiles/" --> add to the database the resources (images)       
                   if(($_FILES["f1"]["type"] == "application/zip") && ($_FILES["f1"]["size"] < 20000000)){
+                      
                       $rst = 'its a zip file';
                       move_uploaded_file($_FILES["f1"]["tmp_name"],
                                 "/var/www/Claroline/web/uploadfiles/" . $_FILES["f1"]["name"]);
@@ -3092,86 +3096,7 @@ class QuestionController extends Controller
                         
                       $zip->close(); 
 
-                        //creation of the ResourceNode & File for the images...
-                        $user= $this->container->get('security.context')->getToken()->getUser();
-                        $workspace = $this->getDoctrine()->getManager()->getRepository('ClarolineCoreBundle:Workspace\AbstractWorkspace')->findBy(array('creator' => $user->getId()));
-                        //$directory = $this->getReference("directory/{$this->directory}");
-                        //$directory = $this->get('claroline.manager.resource_manager');
-                        $resourceManager = $this->container->get('claroline.manager.resource_manager');
-                        $filesDirectory = $this->container->getParameter('claroline.param.files_directory');
-                        $ut = $this->container->get('claroline.utilities.misc');
-                        $fileType = $this->getDoctrine()->getManager()->getRepository('ClarolineCoreBundle:Resource\ResourceType')->findOneByName('file');
-                        $rst =$rst .'---wrkspace----'.$workspace[0]->getName().'-------------';
-
-                        foreach ($tab_liste_fichiers as $filename) {
-
-                            //filepath contain the path of the files in the extraction palce "uploadfile"
-                            $filePath = "/var/www/Claroline/web/uploadfiles/".$filename;
-                            $filePathParts = explode(DIRECTORY_SEPARATOR, $filePath);
-                            //file name of the file
-                            $fileName = array_pop($filePathParts);
-                            //extension of the file
-                            $extension = pathinfo($filePath, PATHINFO_EXTENSION);
-                            $hashName = "{$ut->generateGuid()}.{$extension}";
-
-                            $targetFilePath = $filesDirectory . DIRECTORY_SEPARATOR . $hashName;
-                            //$directory = $this->getReference($filesDirectory);
-
-                            $file = new \Claroline\CoreBundle\Entity\Resource\File();
-                            $file->setName($fileName);
-                            $file->setHashName($hashName);
-
-                            $rst =$rst . '-_-hashname_-_'.$hashName.'--extention---'.$extension.'--targetFilePath---'.$targetFilePath;    
-                            if(($extension=='jpg')||($extension=='jpeg')||($extension=='gif')){
-                                if (file_exists($filePath)) {
-                                    copy($filePath, $targetFilePath);
-                                    $file->setSize(filesize($filePath));
-                                } else {
-                                    touch($targetFilePath);
-                                    $file->setSize(0);
-                                }
-                                $mimeType = MimeTypeGuesser::getInstance()->guess($targetFilePath);
-                                $rst =$rst . '-_-MimeTypeGuesser-_'.$mimeType;
-                                $file->setMimeType($mimeType);
-
-                                //creation ressourcenode
-    //                            $node = new ResourceNode();
-    //                            $node->setResourceType($fileType);
-    //                            $node->setCreator($user);
-    //                            $node->setWorkspace($workspace[0]);
-    //                            $node->setCreationDate(new \Datetime());
-    //                            $node->setClass('Claroline\CoreBundle\Entity\Resource\File');
-    //                            $node->setName($workspace[0]->getName());
-    //                            $node->setMimeType($mimeType);
-
-                               // $file->setResourceNode($node);
-
-                                //$this->getDoctrine()->getManager()->persist($node);
-                                $role = $this
-                                            ->getDoctrine()
-                                            ->getRepository('ClarolineCoreBundle:Role')
-                                            ->findManagerRole($workspace[0]);
-                                $rigths = array(
-                                     'ROLE_WS_MANAGER' => array('open' => true, 'export' => true, 'create' => array(),
-                                                                'role' => $role
-                                                               )
-                                );
-                                //echo 'ws : '.$user->getPersonalWorkspace()->getName();die();
-                                $parent = $this
-                                            ->getDoctrine()
-                                            ->getRepository('ClarolineCoreBundle:Resource\ResourceNode')
-                                            ->findWorkspaceRoot($user->getPersonalWorkspace());
-
-                                $resourceManager->create($file, $fileType, $user, $user->getPersonalWorkspace(), $parent, NULL, $rigths);// ,$node);
-                                    //list of the Resource ID Node that already craeted
-                                     $liste_resource_idnode = array();
-                                     array_push($liste_resource_idnode,$file->getResourceNode()->getId()); 
-                                   
-                            }
-                        }
-                         //$file->getResourceNode()->getId()  ;die();
-                        $this->getDoctrine()->getManager()->flush();  
-                        
+                      
                             
                         //Import for Question QCM --> from unZip File --> Type choiceMultiple Or  choice
                         //import xml file
@@ -3186,8 +3111,91 @@ class QuestionController extends Controller
                                 }
                                 //get the type of the QCM choiceMultiple or choice
                                 $typeqcm = $element->getAttribute("identifier");
-                                
-                                if($typeqcm=="choiceMultiple" || $typeqcm=="choice" ){
+                                echo $typeqcm;
+                                if(($typeqcm=="choiceMultiple") || ($typeqcm=="choice") ){
+                                    
+                                                                           //début : récupération des fichiers et stocker les images dans les tables File
+                                                                                //creation of the ResourceNode & File for the images...
+                                                                                $user= $this->container->get('security.context')->getToken()->getUser();
+                                                                                //createur du workspace
+                                                                                $workspace = $this->getDoctrine()->getManager()->getRepository('ClarolineCoreBundle:Workspace\AbstractWorkspace')->findBy(array('creator' => $user->getId()));
+                                                                                //$directory = $this->getReference("directory/{$this->directory}");
+                                                                                //$directory = $this->get('claroline.manager.resource_manager');
+                                                                                $resourceManager = $this->container->get('claroline.manager.resource_manager');
+                                                                                $filesDirectory = $this->container->getParameter('claroline.param.files_directory');
+                                                                                $ut = $this->container->get('claroline.utilities.misc');
+                                                                                $fileType = $this->getDoctrine()->getManager()->getRepository('ClarolineCoreBundle:Resource\ResourceType')->findOneByName('file');
+                                                                                $rst =$rst .'---wrkspace----'.$workspace[0]->getName().'-------------';
+
+                                                                                foreach ($tab_liste_fichiers as $filename) {
+
+                                                                                    //filepath contain the path of the files in the extraction palce "uploadfile"
+                                                                                    $filePath = "/var/www/Claroline/web/uploadfiles/".$filename;
+                                                                                    $filePathParts = explode(DIRECTORY_SEPARATOR, $filePath);
+                                                                                    //file name of the file
+                                                                                    $fileName = array_pop($filePathParts);
+                                                                                    //extension of the file
+                                                                                    $extension = pathinfo($filePath, PATHINFO_EXTENSION);
+                                                                                    $hashName = "{$ut->generateGuid()}.{$extension}";
+
+                                                                                    $targetFilePath = $filesDirectory . DIRECTORY_SEPARATOR . $hashName;
+                                                                                    //$directory = $this->getReference($filesDirectory);
+
+                                                                                    $file = new \Claroline\CoreBundle\Entity\Resource\File();
+                                                                                    $file->setName($fileName);
+                                                                                    $file->setHashName($hashName);
+
+                                                                                    $rst =$rst . '-_-hashname_-_'.$hashName.'--extention---'.$extension.'--targetFilePath---'.$targetFilePath;    
+                                                                                    if(($extension=='jpg')||($extension=='jpeg')||($extension=='gif')){
+                                                                                        if (file_exists($filePath)) {
+                                                                                            copy($filePath, $targetFilePath);
+                                                                                            $file->setSize(filesize($filePath));
+                                                                                        } else {
+                                                                                            touch($targetFilePath);
+                                                                                            $file->setSize(0);
+                                                                                        }
+                                                                                        $mimeType = MimeTypeGuesser::getInstance()->guess($targetFilePath);
+                                                                                        $rst =$rst . '-_-MimeTypeGuesser-_'.$mimeType;
+                                                                                        $file->setMimeType($mimeType);
+
+                                                                                        //creation ressourcenode
+                                                            //                            $node = new ResourceNode();
+                                                            //                            $node->setResourceType($fileType);
+                                                            //                            $node->setCreator($user);
+                                                            //                            $node->setWorkspace($workspace[0]);
+                                                            //                            $node->setCreationDate(new \Datetime());
+                                                            //                            $node->setClass('Claroline\CoreBundle\Entity\Resource\File');
+                                                            //                            $node->setName($workspace[0]->getName());
+                                                            //                            $node->setMimeType($mimeType);
+
+                                                                                       // $file->setResourceNode($node);
+
+                                                                                        //$this->getDoctrine()->getManager()->persist($node);
+                                                                                        $role = $this
+                                                                                                    ->getDoctrine()
+                                                                                                    ->getRepository('ClarolineCoreBundle:Role')
+                                                                                                    ->findManagerRole($workspace[0]);
+                                                                                        $rigths = array(
+                                                                                             'ROLE_WS_MANAGER' => array('open' => true, 'export' => true, 'create' => array(),
+                                                                                                                        'role' => $role
+                                                                                                                       )
+                                                                                        );
+                                                                                        //echo 'ws : '.$user->getPersonalWorkspace()->getName();die();
+                                                                                        $parent = $this
+                                                                                                    ->getDoctrine()
+                                                                                                    ->getRepository('ClarolineCoreBundle:Resource\ResourceNode')
+                                                                                                    ->findWorkspaceRoot($user->getPersonalWorkspace());
+
+                                                                                        $resourceManager->create($file, $fileType, $user, $user->getPersonalWorkspace(), $parent, NULL, $rigths);// ,$node);
+                                                                                            //list of the Resource ID Node that already craeted
+                                                                                             $liste_resource_idnode = array();
+                                                                                             array_push($liste_resource_idnode,$file->getResourceNode()->getId()); 
+
+                                                                                    }
+                                                                                }
+                                                                                 //$file->getResourceNode()->getId()  ;die();
+                                                                                $this->getDoctrine()->getManager()->flush();  
+                                                                      //Fin récupération & stockage 
                                             $nodeList=$element->getElementsByTagName("responseDeclaration");
                                             $responseDeclaration=($nodeList->item(0));
                                             $nodeList2=$responseDeclaration->getElementsByTagName("correctResponse");
@@ -3345,6 +3353,118 @@ class QuestionController extends Controller
 
 
                                             $em->flush();
+                                }else if($typeqcm=="SelectPoint"){
+                                    
+                                        $responsedaclr = $element->getElementsByTagName("responseDeclaration");
+                                        //$responsedaclr = $elements->item(0);
+                                        $nodelist = $responsedaclr->item(0);
+                                        $correctresponse = $nodelist->getElementsByTagName("correctResponse");
+                
+                                        //echo $correctresponse->nodeValue;
+                                        //$valeur = $nodelist->getElementByTagName("value"); 
+                                        $areaMapping=$responsedaclr->item(0)->getElementsByTagName("areaMapping");
+                                        $areaMapEntry =$areaMapping->item(0)->getElementsByTagName("areaMapEntry");
+                                        $shape =$areaMapEntry->item(0)->getAttribute("shape");
+                                        $coordstxt=$areaMapEntry->item(0)->getAttribute("coords");
+                                        $mappedValue=$areaMapEntry->item(0)->getAttribute("mappedValue");
+                                        
+                                        $itemBody= $element->getElementsByTagName("itemBody");
+                                        $selectPointInteraction = $itemBody->item(0)->getElementsByTagName("selectPointInteraction");
+                                        $prompt =  $selectPointInteraction->item(0)->getElementsByTagName("prompt");
+                                        $object = $selectPointInteraction->item(0)->getElementsByTagName("object");
+                                        
+                                        
+                                        $type=$object->item(0)->getAttribute("type");
+                                        $width=$object->item(0)->getAttribute("width");
+                                        $height=$object->item(0)->getAttribute("height");
+                                        $data=$object->item(0)->getAttribute("data");
+                                        
+                                        
+                                        $question  = new Question();
+                                        $Category = new Category();
+                                        $interaction =new Interaction();
+                                        $interactiongraphic =new InteractionGraphic();
+                                        $coords = new Coords();
+                                        $ujmdocument = new Document();
+                                        
+                                        
+                                        
+                                        $question->setTitle($title);
+                                        $Category_import = $this->getDoctrine()
+                                                                 ->getManager()
+                                                                 ->getRepository('UJMExoBundle:Category')->findBy(array('value' => "import"));
+                                            
+                                        if(count($Category_import)==0){
+                                            $Category->setValue("import");
+                                            $Category->setUser($this->container->get('security.context')->getToken()->getUser());
+                                            $question->setCategory($Category); 
+                                        }else{
+                                            $question->setCategory($Category_import[0]);
+                                        }
+                                        
+                                        $question->setUser($this->container->get('security.context')->getToken()->getUser());
+                                        $date = new \Datetime();
+                                        $question->setDateCreate(new \Datetime());
+
+
+
+                                        $interaction->setType('InteractionGraphic');
+                                        //strip_tags($res_prompt,'<img><a><p><table>')
+                                        $interaction->setInvite(($prompt));
+                                        $interaction->setQuestion($question);
+
+                                        $interactiongraphic->setWidth($width);
+                                        $interactiongraphic->setHeight($height);
+                                        
+                                        
+                                        //list($x,$y,$z) = split('[,]', $coords);
+                                        $parts = explode(",", $coordstxt);
+                                        $x = $parts[0];
+                                        $y = $parts[1];
+                                        $z = $parts[2];
+                                        $radius = $z * 2;
+                                        $x_center=$x - ($radius);
+                                        $y_center=$y - ($radius); 
+                                        
+                                        $coords->setShape($shape);
+                                        $coords->setValue($x_center.",".$y_center);
+                                        $coords->setSize($radius);
+                                        $coords->setInteractionGraphic($interactiongraphic);
+                                        
+                                        $user= $this->container->get('security.context')->getToken()->getUser();                                        
+                                        $ujmdocument->setUser($user);
+                                        $ujmdocument->setLabel($object);
+                                            //file name of the file
+                                            $listpath = explode("/", $data);  
+                                            $fileName =  $listpath[count($listpath)-1];
+                                            echo $fileName;
+                                            //extension of the file
+                                            $extension = pathinfo($data, PATHINFO_EXTENSION);
+                                        //il faut changer le nom de l'image
+                                        $ujmdocument->setUrl("./uploads/ujmexo/users_documents/".$user->getUsername()."/images/".$fileName);
+                                        $ujmdocument->setType($extension);       
+                                        
+                                        
+                                        
+                                        $interactiongraphic->setInteraction($interaction);
+                                        $interactiongraphic->setDocument($ujmdocument);
+                                        
+                                              
+                                        $em = $this->getDoctrine()->getManager();  
+                                          
+                                        $em->persist($coords->getInteractionGraphic());
+                                        $em->persist($ujmdocument);  
+                                        $em->persist($coords);
+                                        $em->persist($coords->getInteractionGraphic()->getInteraction()->getQuestion());
+                                        $em->persist($coords->getInteractionGraphic()->getInteraction());
+                                        
+                                        if(count($Category_import)==0){
+                                            $em->persist($Category);
+                                        }
+                                        
+                                        $em->flush();
+                                        
+                                    
                                 }
                     
                     
