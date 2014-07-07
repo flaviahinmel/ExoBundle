@@ -2369,7 +2369,10 @@ class QuestionController extends Controller
                                $interactionsqcm = $this->getDoctrine()
                                                  ->getManager()
                                                  ->getRepository('UJMExoBundle:InteractionQCM')->findBy(array('interaction' => $interactions[0]->getId()));
-
+                               
+                               //if it's Null mean "Global notation for QCM" Else it's Notation for each choice
+                               $weightresponse = $interactionsqcm[0]->getWeightResponse();
+                               
                                $choices2 = $interactionsqcm[0]->getChoices();
                                
                                             // Search for the ID of the ressource from the Invite colonne 
@@ -2387,14 +2390,14 @@ class QuestionController extends Controller
                                                 {
                                                   if ($img->hasAttribute("src")) {
                                                      $src= $img->getAttribute("src");
-                                                      $id_node= substr($src, 47);
-                                                      $resources_file = $this->getDoctrine()
+                                                     $id_node= substr($src, 47);
+                                                     $resources_file = $this->getDoctrine()
                                                                    ->getManager()
                                                                    ->getRepository('ClarolineCoreBundle:Resource\File')->findBy(array('resourceNode' => $id_node));
-                                                       $resources_node = $this->getDoctrine()
+                                                     $resources_node = $this->getDoctrine()
                                                                    ->getManager()
                                                                    ->getRepository('ClarolineCoreBundle:Resource\ResourceNode')->findBy(array('id' => $id_node));
-                                                       $path_img = $this->container->getParameter('claroline.param.files_directory').'/'.$resources_file[0]->getHashName();
+                                                     $path_img = $this->container->getParameter('claroline.param.files_directory').'/'.$resources_file[0]->getHashName();
                                                   }
                 
                                                 }     
@@ -2444,6 +2447,7 @@ class QuestionController extends Controller
                                      $node->appendChild($responseDeclaration);
                                         
                                      
+
                                      // add the tag <outcomeDeclaration> to the <node>
                                      $outcomeDeclaration = $document->CreateElement('outcomeDeclaration');
                                      $outcomeDeclaration->setAttribute("identifier", "SCORE");
@@ -2493,11 +2497,12 @@ class QuestionController extends Controller
                                             $this->generate_imsmanifest_File($resources_node[0]->getName());
                                         }
                                         
-                                            
+                                     $mapping = $document->CreateElement('mapping');       
                                      $prompttxt =  $document->CreateTextNode(html_entity_decode($res1));
                                      $prompt->appendChild($prompttxt);
                                      $i=-1;
                                      foreach($choices2 as $ch){
+                                         
                                          $i++;
                                          if($ch->getRightResponse()== true){
                                                  $value = $document->CreateElement('value');
@@ -2505,22 +2510,102 @@ class QuestionController extends Controller
                                                  $valuetxt =  $document->CreateTextNode("Choice".$Alphabets[$i]);
                                                  $value->appendChild($valuetxt);
                                          }
+                                        //Add new Tag mapping if the weight of the question is true 
+                                        if($weightresponse==true){
+                                            // Unique Notation for the QCM
+                                            $mapEntry= $document->CreateElement('mapEntry');
+                                            $mapEntry->setAttribute("mapKey", "Choice".$Alphabets[$i] );
+                                            $mapEntry->setAttribute("mappedValue",$ch->getWeight());
+                                            $mapping->appendChild($mapEntry);
+                                            $responseDeclaration->appendChild($mapping);
+                                        }else{
+                                            // Globale Notation for the QCM
+                                            $responseProcessing =  $document->CreateElement('responseProcessing');
+                                            $responseCondition = $document->CreateElement('responseCondition');
+                                            $responseIf = $document->CreateElement('responseIf');
+                                            $responseElse = $document->CreateElement('responseElse');
+                                            $match = $document->CreateElement('match');
+                                            $variable = $document->CreateElement('variable');
+                                            $variable->setAttribute("identifier", "RESPONSE");
+                                            $correct = $document->CreateElement('correct');
+                                            $correct->setAttribute("identifier", "RESPONSE");
+                                           
+                                            $match->appendChild($variable);
+                                            $match->appendChild($correct);
+                                            
+                                            $setOutcomeValue = $document->CreateElement('setOutcomeValue');
+                                            $setOutcomeValue->setAttribute("identifier", "SCORE");
+                                            
+                                            $baseValue= $document->CreateElement('baseValue');
+                                            $baseValue->setAttribute("baseType", "float");
+                                            $baseValuetxt = $document->CreateTextNode($interactionsqcm[0]->getScoreRightResponse());
+                                            $baseValue->appendChild($baseValuetxt);
+                                            
+                                            $responseIf->appendChild($match);
+                                            $setOutcomeValue->appendChild($baseValue);
+                                            $responseIf->appendChild($setOutcomeValue);
+                                            
+                                            ////
+                                            $setOutcomeValue = $document->CreateElement('setOutcomeValue');
+                                            $setOutcomeValue->setAttribute("identifier", "SCORE");
+                                            
+                                            $baseValue= $document->CreateElement('baseValue');
+                                            $baseValue->setAttribute("baseType", "float");
+                                            $baseValuetxt = $document->CreateTextNode($interactionsqcm[0]->getScoreFalseResponse());
+                                            $baseValue->appendChild($baseValuetxt);
+                                            
+                
+                                            $setOutcomeValue->appendChild($baseValue);
+                                            $responseElse->appendChild($setOutcomeValue);
+                                            
+                                            
+                                            $responseCondition->appendChild($responseIf);
+                                            $responseCondition->appendChild($responseElse);
+                                            
+                                            $responseProcessing->appendChild($responseCondition);
+                                            
+                                            
+                                            
+                                        }
+                                        //
+                                        
                                          $simpleChoice = $document->CreateElement('simpleChoice');
                                          $simpleChoice->setAttribute("identifier", "Choice".$Alphabets[$i]);
                                          $choiceInteraction->appendChild($simpleChoice);
                                          $simpleChoicetxt =  $document->CreateTextNode(strip_tags($ch->getLabel(),'<img>'));
                                          $simpleChoice->appendChild($simpleChoicetxt);
+                                         //comment per line for each choice
+                                         if(($ch->getFeedback()!=Null) && ($ch->getFeedback()!="")){
+                                                $feedbackInline = $document->CreateElement('feedbackInline');
+                                                $feedbackInline->setAttribute("outcomeIdentifier", "FEEDBACK");
+                                                $feedbackInline->setAttribute("identifier","Choice".$Alphabets[$i]);
+                                                $feedbackInline->setAttribute("showHide","show");  
+                                                $feedbackInlinetxt =  $document->CreateTextNode($ch->getFeedback());
+                                                $feedbackInline->appendChild($feedbackInlinetxt);
+                                                $simpleChoice->appendChild($feedbackInline);
+                                         }
+                                         
                                      }
+                                     
+                                    
+                                    //comment globale for this question
+                                    if(($interactions[0]->getFeedBack()!=Null) && ($interactions[0]->getFeedBack()!="") ){
+                                            $modalFeedback=$document->CreateElement('modalFeedback');
+                                            $modalFeedback->setAttribute("outcomeIdentifier","FEEDBACK");
+                                            $modalFeedback->setAttribute("identifier","COMMENT");
+                                            $modalFeedback->setAttribute("showHide","show");
+                                            $modalFeedbacktxt = $document->CreateTextNode($interactions[0]->getFeedBack());  
+                                            $modalFeedback->appendChild($modalFeedbacktxt);
+                                            $node->appendChild($modalFeedback);
+                                    }
+                                    
+                                    if($weightresponse==False){
+                                     $node->appendChild($responseProcessing);
+                                    }         
+                                             
                                  $document->save('testfile.xml');
                                  
                                 $file = '/var/www/Claroline/web/testfile.xml';                                 
-                
-                                
-
-                    
-                     
-                     //   
-                
                                 //readfile("/var/www/Claroline/web/testfile.xml");
                     
                 
@@ -2545,10 +2630,11 @@ class QuestionController extends Controller
                     $zip = new \ZipArchive();
                     $zip->open($tmpFileName, \ZipArchive::CREATE);
                     $zip->addFile("/var/www/Claroline/web/testfile.xml", 'ShemaQTI.xml');
-                     $zip->addFile("/var/www/Claroline/web/imsmanifest.xml", 'imsmanifest.xml');
+                    
                     
                     if(!empty($path_img)){
                          $zip->addFile($path_img, "images/".$resources_node[0]->getName());
+                         $zip->addFile("/var/www/Claroline/web/imsmanifest.xml", 'imsmanifest.xml');
                     }
                     $zip->close();
                     $response = new BinaryFileResponse($tmpFileName);                    
@@ -2928,7 +3014,36 @@ class QuestionController extends Controller
                                             $nodeList2=$responseDeclaration->getElementsByTagName("correctResponse");
                                             $correctResponse=$nodeList2->item(0);
                                             $nodelist3 = $correctResponse->getElementsByTagName("value");
-
+                                            $lstmapping = $responseDeclaration->getElementsByTagName('mapping');
+                                            $mapEntrys=null;
+                                            $baseValue =null;
+                                            $baseValue2=null;
+                                            if($responseDeclaration->getElementsByTagName("mapping")->item(0)){
+                                                $mapping   = $responseDeclaration->getElementsByTagName("mapping")->item(0);
+                                                $mapEntrys = $mapping->getElementsByTagName("mapEntry");
+                                            }
+                                            else
+                                                {
+                                                $responseProcessing   = $element->getElementsByTagName("responseProcessing")->item(0);
+                                                $responseCondition = $responseProcessing->getElementsByTagName("responseCondition")->item(0);
+                                                $responseIf = $responseProcessing->getElementsByTagName("responseIf")->item(0);
+                                                $setOutcomeValue = $responseIf->getElementsByTagName("setOutcomeValue")->item(0);
+                                                $baseValue = $setOutcomeValue->getElementsByTagName("baseValue")->item(0)->nodeValue;
+                                                echo $baseValue;
+                                                $responseElse = $responseProcessing->getElementsByTagName("responseElse")->item(0);
+                                                $setOutcomeValue = $responseElse->getElementsByTagName("setOutcomeValue")->item(0);
+                                                $baseValue2 = $setOutcomeValue->getElementsByTagName("baseValue")->item(0)->nodeValue;
+                                                echo $baseValue2;
+                                                
+                                            }
+                                                
+                                            
+                                            $modalfeedback=null;
+                                            if($element->getElementsByTagName("modalFeedback")->item(0)){
+                
+                                                $modalfeedback=$element->getElementsByTagName("modalFeedback");
+                                            }
+                                            
                                             //array correct choices 
                                             $correctchoices = new \Doctrine\Common\Collections\ArrayCollection;
 
@@ -2963,13 +3078,23 @@ class QuestionController extends Controller
 
                                             //array correct choices 
                                             $choices = new \Doctrine\Common\Collections\ArrayCollection;
+                                            $commentsperline = new \Doctrine\Common\Collections\ArrayCollection;
+                                            
                                             $identifier_choices = new \Doctrine\Common\Collections\ArrayCollection;
 
                                             $nodeList3=$choiceInteraction->getElementsByTagName("simpleChoice");
+                                           
                                             foreach($nodeList3 as $simpleChoice)  
                                             {
                                                 $choices->add($simpleChoice->nodeValue);
                                                 $identifier_choices->add($simpleChoice->getAttribute("identifier"));
+                                                if($simpleChoice->getElementsByTagName("feedbackInline")->item(0)){
+                                                     $feedbackInline = $simpleChoice->getElementsByTagName("feedbackInline")->item(0)->nodeValue;
+                                                     $commentsperline->add($feedbackInline);
+                                                }
+                                               
+                                                    
+                                                
                                                 //$rst =$rst."--------Choice : ".$valeur."\n";
                                                 //$identifier = 
                                                 //$rst =$rst."--------identifier ".$identifier."\n";
@@ -3012,7 +3137,12 @@ class QuestionController extends Controller
                                             $interaction->setType('InteractionQCM');
                                             $interaction->setInvite($prompt);
                                             $interaction->setQuestion($question);
-
+                                            if($modalfeedback!=null){
+                                                if(($modalfeedback->item(0)->nodeValue != null) && ($modalfeedback->item(0)->nodeValue != "")){
+                                                $interaction->setFeedBack($modalfeedback->item(0)->nodeValue);
+                                                }
+                                            }
+                                               
 
 
 
@@ -3029,6 +3159,34 @@ class QuestionController extends Controller
                                                 $choice1 = new Choice();
                                                 $choice1->setLabel($choix);
                                                 $choice1->setOrdre($ord);
+                                                
+                                                //add Mappentry
+                                                $weight =False;
+                                                if($mapEntrys!=null){
+                                                    if(count($mapEntrys)>0){
+                                                    $mapEntry=$mapEntrys->item($index);
+                                                    $mappedValue=$mapEntry->getAttribute("mappedValue");  
+                                                    //$mapKey=$mapEntry->getAttribute("mappedValue");  
+                                                    $choice1->setWeight($mappedValue);
+                                                    $interactionqcm->setWeightResponse(1);
+                                                    $weight =True;
+                                                    }
+                                                     $interactionqcm->setScoreRightResponse(0);
+                                                     $interactionqcm->setScoreFalseResponse(0);
+                                                }else{
+                                                    echo 'entrée ici ';
+                                                    $interactionqcm->setScoreFalseResponse($baseValue2);
+                                                    $interactionqcm->setScoreRightResponse($baseValue);
+                                                    $interactionqcm->setWeightResponse(0);
+                                                }
+                                                
+                                                
+                                                //  
+                                                //add comment
+                                                if(count($commentsperline)>0){
+                                                    $choice1->setFeedback($commentsperline[$index]);
+                                                }
+                                                //
                                                 foreach ($correctchoices as $corrvalue) {
                                                     $rst= $rst."------------".$identifier_choices[$index]."*--------------------".$corrvalue;
                                                     if(strtolower(trim($identifier_choices[$index])) == strtolower(trim($corrvalue))){
@@ -3051,8 +3209,10 @@ class QuestionController extends Controller
                                                 $interactionqcm->setTypeQCM($type_qcm[0]);
                                             }
                                             $interactionqcm->setInteraction($interaction);
-
-
+                                           
+                
+                                            
+                                            
                                             $em->persist($interactionqcm);
                                             $em->persist($interactionqcm->getInteraction()->getQuestion());
                                             $em->persist($interactionqcm->getInteraction());
