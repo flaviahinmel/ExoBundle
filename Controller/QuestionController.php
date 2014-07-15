@@ -2629,7 +2629,7 @@ class QuestionController extends Controller
                     $tmpFileName = tempnam("/tmp", "xb_");
                     $zip = new \ZipArchive();
                     $zip->open($tmpFileName, \ZipArchive::CREATE);
-                    $zip->addFile("/var/www/Claroline/web/testfile.xml", 'ShemaQTI.xml');
+                    $zip->addFile("/var/www/Claroline/web/testfile.xml", 'SchemaQTI.xml');
                     
                     
                     if(!empty($path_img)){
@@ -2721,8 +2721,10 @@ class QuestionController extends Controller
                     $areaMapEntry =  $document->createElement("areaMapEntry");
                     $areaMapEntry->setAttribute("shape", $coords[0]->getShape());
                     $areaMapEntry->setAttribute("coords",$x_center_circle.",".$y_center_circle.",".$radius);
-                    $areaMapEntry->setAttribute("mappedValue", "1");
+                    $areaMapEntry->setAttribute("mappedValue", $coords[0]->getScoreCoords());
                     $areaMapping->appendChild($areaMapEntry);
+                    
+                    
                     
                     //add tag <itemBody>... to <assessmentItem>
                     $itemBody =$document->createElement("itemBody");
@@ -2752,6 +2754,17 @@ class QuestionController extends Controller
                     $itemBody->appendChild($selectPointInteraction);
                     $node->appendChild($itemBody);
                     //save xml File
+                    //comment
+                    if(($interactions[0]->getFeedBack()!=Null) && ($interactions[0]->getFeedBack()!="") ){
+                            $modalFeedback=$document->CreateElement('modalFeedback');
+                            $modalFeedback->setAttribute("outcomeIdentifier","FEEDBACK");
+                            $modalFeedback->setAttribute("identifier","COMMENT");
+                            $modalFeedback->setAttribute("showHide","show");
+                            $modalFeedbacktxt = $document->CreateTextNode($interactions[0]->getFeedBack());  
+                            $modalFeedback->appendChild($modalFeedbacktxt);
+                            $node->appendChild($modalFeedback);
+                    }
+                    
                     $document->save('testfile.xml');
                     
                     
@@ -2769,7 +2782,7 @@ class QuestionController extends Controller
                     $tmpFileName = tempnam("/tmp", "xb_");
                     $zip = new \ZipArchive();
                     $zip->open($tmpFileName, \ZipArchive::CREATE);
-                    $zip->addFile("/var/www/Claroline/web/testfile.xml", 'QTI-Shema.xml');
+                    $zip->addFile("/var/www/Claroline/web/testfile.xml", 'SchemaQTI.xml');
                     $zip->addFile("/var/www/Claroline/web/imsmanifest.xml", 'imsmanifest.xml');
                     if(!empty($path)){
                             $zip->addFile($path, "images/".$nom[count($nom)-1]);
@@ -2809,7 +2822,10 @@ class QuestionController extends Controller
                                                  ->getManager()                                                                    
                                                  ->getRepository('UJMExoBundle:WordResponse')->findAll(array('hole' => $ujmHole));
                          
-                         //creation of the XML FIle      
+                         
+
+                         
+                    //creation of the XML FIle      
                      $document = new \DOMDocument(); 
                      
                    // on crée l'élément principal <Node>
@@ -2831,9 +2847,11 @@ class QuestionController extends Controller
                     $responseDeclaration->setAttribute("baseType", "string");
                     $node->appendChild($responseDeclaration);
 
+                    //add <mapping> to <responseDeclaration>
+                    //add <mapEntry> to <responseDeclaration>
+                    $mapping = $document->createElement("mapping");
+                    $mapping->setAttribute("defaultValue", "0");
                     
-                    
-                
                             
                             
                     // add the tag <correctResponse> to the <responseDeclaration>
@@ -2847,21 +2865,18 @@ class QuestionController extends Controller
                         $Tagvalue->appendChild($responsevalue);
                         $correctResponse->appendChild($Tagvalue);
                         $responseDeclaration->appendChild($correctResponse);
-                       
+                        
+                        
+                        //response .... mapentry
+                         $mapEntry =  $document->createElement("mapEntry");
+                         $mapEntry->setAttribute("mapKey", $resp->getResponse());
+                         $mapEntry->setAttribute("mappedValue",$resp->getScore());
+                         $mapping->appendChild($mapEntry);
                         
                     }
-                    $mapping = $document->createElement("mapping");
-                    $mapping->setAttribute("defaultValue", "0");
-                    foreach($ujm_word_response as $resp){
-                     // add the tag <mapping> to the <responseDeclaration>
-                        
-                        $mapEntry = $document->createElement("mapEntry");
-                        $mapEntry->setAttribute("mapKey", $resp->getResponse());
-                        $mapEntry->setAttribute("mappedValue", $resp->getScore());
-                        $mapping->appendChild($mapEntry);
-                                                                                            
-                    }
+                    
                     $responseDeclaration->appendChild($mapping);
+                    
                     $outcomeDeclaration = $document->createElement("outcomeDeclaration");
                     $outcomeDeclaration->setAttribute("identifier", "SCORE");
                     $outcomeDeclaration->setAttribute("cardinality", "single");
@@ -2878,9 +2893,20 @@ class QuestionController extends Controller
                     $itemBody->appendChild($objecttxt);
                 
                     
-              
-                    
                     $node->appendChild($itemBody);
+                    
+                    //comment
+                    if(($interactions[0]->getFeedBack()!=Null) && ($interactions[0]->getFeedBack()!="") ){
+                            $modalFeedback=$document->CreateElement('modalFeedback');
+                            $modalFeedback->setAttribute("outcomeIdentifier","FEEDBACK");
+                            $modalFeedback->setAttribute("identifier","COMMENT");
+                            $modalFeedback->setAttribute("showHide","show");
+                            $modalFeedbacktxt = $document->CreateTextNode($interactions[0]->getFeedBack());  
+                            $modalFeedback->appendChild($modalFeedbacktxt);
+                            $node->appendChild($modalFeedback);
+                    }
+                    
+                    
                     //save xml File
                     $document->save('Q_Hole.xml');
                     
@@ -2944,11 +2970,11 @@ class QuestionController extends Controller
                     $resource = $document->CreateElement('resource');
                     $resource->setAttribute("type","imsqti_item_xmlv2p1");
                     //the name of the file must be variable ....
-                    $resource->setAttribute("href","ShemaQTI.xml");
+                    $resource->setAttribute("href","SchemaQTI.xml");
                     $resources->appendChild($resource);
                     
                     $file = $document->CreateElement('file');
-                    $file->setAttribute("href","ShemaQTI.xml");
+                    $file->setAttribute("href","SchemaQTI.xml");
                     $resource->appendChild($file);
                     
                     $file2 = $document->CreateElement('file');
@@ -2975,7 +3001,7 @@ class QuestionController extends Controller
                   $source = $_FILES["f1"]["tmp_name"];
                   $extension = end($temp);
                   $rst= "src tmp_name : ".$source;
-
+                  $rst= $rst."test rst";
                   if ((($_FILES["f1"]["type"] == "text/xml")) && ($_FILES["f1"]["size"] < 20000000) && in_array($extension, $allowedExts)) {
 
 
@@ -3174,7 +3200,7 @@ class QuestionController extends Controller
                                                      $interactionqcm->setScoreRightResponse(0);
                                                      $interactionqcm->setScoreFalseResponse(0);
                                                 }else{
-                                                    echo 'entrée ici ';
+                
                                                     $interactionqcm->setScoreFalseResponse($baseValue2);
                                                     $interactionqcm->setScoreRightResponse($baseValue);
                                                     $interactionqcm->setWeightResponse(0);
@@ -3260,7 +3286,7 @@ class QuestionController extends Controller
                             
                         //Import for Question QCM --> from unZip File --> Type choiceMultiple Or  choice
                         //import xml file
-                                $file = "/var/www/Claroline/web/uploadfiles/ShemaQTI.xml";
+                                $file = "/var/www/Claroline/web/uploadfiles/SchemaQTI.xml";
                                 $document_xml = new \DomDocument();
                                 $document_xml->load($file);
                                 $elements = $document_xml->getElementsByTagName('assessmentItem');
@@ -3286,7 +3312,8 @@ class QuestionController extends Controller
                                                                                 $ut = $this->container->get('claroline.utilities.misc');
                                                                                 $fileType = $this->getDoctrine()->getManager()->getRepository('ClarolineCoreBundle:Resource\ResourceType')->findOneByName('file');
                                                                                 $rst =$rst .'---wrkspace----'.$workspace[0]->getName().'-------------';
-
+                                                                                
+                                                                                $liste_resource_idnode = array();
                                                                                 foreach ($tab_liste_fichiers as $filename) {
 
                                                                                     //filepath contain the path of the files in the extraction palce "uploadfile"
@@ -3348,7 +3375,7 @@ class QuestionController extends Controller
 
                                                                                         $resourceManager->create($file, $fileType, $user, $user->getPersonalWorkspace(), $parent, NULL, $rigths);// ,$node);
                                                                                             //list of the Resource ID Node that already craeted
-                                                                                             $liste_resource_idnode = array();
+                                                                                             
                                                                                              array_push($liste_resource_idnode,$file->getResourceNode()->getId()); 
 
                                                                                     }
@@ -3398,7 +3425,7 @@ class QuestionController extends Controller
                                                             foreach($listeimgs as $img)
                                                             {
                                                               if ($img->hasAttribute("src")) {
-                                                                  $img->setAttribute("src","/Claroline/web/app_dev.php/file/resource/media/".$liste_resource_idnode[$index]);
+                                                                 $img->setAttribute("src","/Claroline/web/app_dev.php/file/resource/media/".$liste_resource_idnode[$index]);
                                                               }
                                                              $index= $index +1;
                                                             }     
@@ -3514,7 +3541,7 @@ class QuestionController extends Controller
 
                                             $em->flush();
                                 }else if($typeqcm=="SelectPoint"){
-                                    
+                                            $rst= $rst. "enter";
                                         $responsedaclr = $element->getElementsByTagName("responseDeclaration");
                                         //$responsedaclr = $elements->item(0);
                                         $nodelist = $responsedaclr->item(0);
@@ -3539,6 +3566,13 @@ class QuestionController extends Controller
                                         $height=$object->item(0)->getAttribute("height");
                                         $data=$object->item(0)->getAttribute("data");
                                         
+                                        $modalfeedback=null;
+                                        if($element->getElementsByTagName("modalFeedback")->item(0)){
+
+                                            $modalfeedback=$element->getElementsByTagName("modalFeedback");
+                                        }
+                
+      
                                         
                                         $question  = new Question();
                                         $Category = new Category();
@@ -3570,11 +3604,14 @@ class QuestionController extends Controller
 
                                         $interaction->setType('InteractionGraphic');
                                         //strip_tags($res_prompt,'<img><a><p><table>')
-                                        $interaction->setInvite(($prompt));
+                                        var_dump($modalfeedback->item(0)->nodeValue);
+                                        $interaction->setInvite(($prompt->item(0)->nodeValue));
                                         $interaction->setQuestion($question);
+                                        $interaction->setFeedBack($modalfeedback->item(0)->nodeValue);
 
                                         $interactiongraphic->setWidth($width);
                                         $interactiongraphic->setHeight($height);
+                                        
                                         
                                         
                                         //list($x,$y,$z) = split('[,]', $coords);
@@ -3586,23 +3623,26 @@ class QuestionController extends Controller
                                         $x_center=$x - ($radius);
                                         $y_center=$y - ($radius); 
                                         
-                                        $coords->setShape($shape);
+                                        $coords->setShape($shape);var_dump($shape);
                                         $coords->setValue($x_center.",".$y_center);
                                         $coords->setSize($radius);
+                                        $coords->setColor('white');
                                         $coords->setInteractionGraphic($interactiongraphic);
+                                        $coords->setScoreCoords($mappedValue);var_dump($mappedValue);
                                         
                                         $user= $this->container->get('security.context')->getToken()->getUser();                                        
                                         $ujmdocument->setUser($user);
-                                        $ujmdocument->setLabel($object);
+                                        $ujmdocument->setLabel($object->item(0)->nodeValue);var_dump($object->item(0)->nodeValue);
                                             //file name of the file
                                             $listpath = explode("/", $data);  
                                             $fileName =  $listpath[count($listpath)-1];
-                                            echo $fileName;
+                                            $rst=$rst."$fileName=". $fileName;
+                                         
                                             //extension of the file
                                             $extension = pathinfo($data, PATHINFO_EXTENSION);
                                         //il faut changer le nom de l'image
                                         $ujmdocument->setUrl("./uploads/ujmexo/users_documents/".$user->getUsername()."/images/".$fileName);
-                                        $ujmdocument->setType($extension);       
+                                        $ujmdocument->setType($extension);        
                                         
                                         
                                         
@@ -3619,7 +3659,7 @@ class QuestionController extends Controller
                                         $em->persist($coords->getInteractionGraphic()->getInteraction());
                                         
                                         if(count($Category_import)==0){
-                                            $em->persist($Category);
+                                            $em->persist($Category); 
                                         }
                                         
                                         $em->flush();
@@ -3630,11 +3670,6 @@ class QuestionController extends Controller
                     
                   }
                   
-                  
-                  
-                            
-               
-                
                 
                /*
                 foreach($childs as $enfant) // On prend chaque nœud enfant séparément
@@ -3655,12 +3690,15 @@ class QuestionController extends Controller
                     }
                       
                      
-                }  */
-                  
-                   return $this->render(
+                }   return $this->render('UJMExoBundle:Question:index.html.twig');
+                   
+                */
+                  return $this->render(
                         'UJMExoBundle:Question:ListQuestions.html.twig', array(
                         'rst' => $rst,
                         )
-                    );
+                    ); 
+                 
+                  
     }
 }
