@@ -2927,14 +2927,122 @@ class QuestionController extends Controller
                     return $response;
 
                 case "InteractionOpen":
-                    $interactionOpen = $this->getDoctrine()
-                    ->getManager()
-                    ->getRepository('UJMExoBundle:InteractionOpen')
-                    ->getInteractionOpen($interaction[0]->getId());
+                                
+                                $Question = $this->getDoctrine()
+                                                             ->getManager()
+                                                             ->getRepository('UJMExoBundle:Question')->findBy(array('id' => $id));
 
+
+                                $interactions = $this->getDoctrine()
+                                                             ->getManager()
+                                                             ->getRepository('UJMExoBundle:Interaction')->findBy(array('question' => $id));
+
+
+                                $interactionOpen = $this->getDoctrine()->getManager()
+                                                        ->getRepository('UJMExoBundle:InteractionOpen')->getInteractionOpen($interaction[0]->getId());
+
+                                                                
+                                    
+
+
+
+
+                                //creation of the XML FIle      
+                                 $document = new \DOMDocument(); 
+
+                                // on crée l'élément principal <Node>
+                                $node = $document->CreateElement('assessmentItem');
+                                $node->setAttribute("xmlns", "http://www.imsglobal.org/xsd/imsqti_v2p1");
+                                $node->setAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
+                                $node->setAttribute("xsi:schemaLocation", "http://www.imsglobal.org/xsd/imsqti_v2p1 http://www.imsglobal.org/xsd/imsqti_v2p1.xsd"); 
+
+                                $node->setAttribute("identifier", "extendedText");
+                                $node->setAttribute("title",$Question[0]->getTitle());
+                                $node->setAttribute("adaptive", "false");
+                                $node->setAttribute("timeDependent", "false");
+                                $document->appendChild($node);
+
+                                // Add the tag <responseDeclaration> to <node>
+                                $responseDeclaration = $document->CreateElement('responseDeclaration');
+                                $responseDeclaration->setAttribute("identifier", "RESPONSE");
+                                $responseDeclaration->setAttribute("cardinality", "single");
+                                $responseDeclaration->setAttribute("baseType", "string");
+                                $node->appendChild($responseDeclaration);
+
+                                //add <mapping> to <responseDeclaration>
+                                //add <mapEntry> to <responseDeclaration>
+                                $outcomeDeclaration = $document->createElement("outcomeDeclaration");
+                                $outcomeDeclaration->setAttribute("identifier", "Score");
+                                $outcomeDeclaration->setAttribute("cardinality", "single");
+                                $outcomeDeclaration->setAttribute("baseType", "float");
+
+                                // add the tag <correctResponse> to the <responseDeclaration>
+                                $defaultValue = $document->createElement("defaultValue");
+
+                
+
+
+                                $Tagvalue = $document->CreateElement("value");
+                                $responsevalue =  $document->CreateTextNode($interactionOpen[0]->getScoreMaxLongResp());
+                                $Tagvalue->appendChild($responsevalue);
+                                $defaultValue->appendChild($Tagvalue);
+                                $outcomeDeclaration->appendChild($defaultValue);
+
+
+                
+                
+
+                                $node->appendChild($outcomeDeclaration);
+
+                                $outcomeDeclaration = $document->createElement("outcomeDeclaration");
+                                $outcomeDeclaration->setAttribute("identifier", "SCORE");
+                                $outcomeDeclaration->setAttribute("cardinality", "single");
+                                $outcomeDeclaration->setAttribute("baseType", "float");
+                                $node->appendChild($outcomeDeclaration);
+
+                                //add tag <itemBody>... to <assessmentItem>
+                                $itemBody = $document->createElement("itemBody");
+                
+                
+                                $objecttxt =  $document->CreateTextNode($interactions[0]->getInvite());
+                                $itemBody->appendChild($objecttxt);
+
+
+                                $node->appendChild($itemBody);
+
+                                //comment
+                                if(($interactions[0]->getFeedBack()!=Null) && ($interactions[0]->getFeedBack()!="") ){
+                                        $modalFeedback=$document->CreateElement('modalFeedback');
+                                        $modalFeedback->setAttribute("outcomeIdentifier","FEEDBACK");
+                                        $modalFeedback->setAttribute("identifier","COMMENT");
+                                        $modalFeedback->setAttribute("showHide","show");
+                                        $modalFeedbacktxt = $document->CreateTextNode($interactions[0]->getFeedBack());  
+                                        $modalFeedback->appendChild($modalFeedbacktxt);
+                                        $node->appendChild($modalFeedback);
+                                }
+
+
+                                //save xml File
+                                $document->save('Q_Open.xml');
+
+
+                                //create zip file and add the xml file with images...
+                                $tmpFileName = tempnam("/tmp", "xb_");
+                                $zip = new \ZipArchive();
+                                $zip->open($tmpFileName, \ZipArchive::CREATE);
+                                $zip->addFile("/var/www/Claroline/web/Q_Open.xml", 'QTI-Q-OpenShema.xml');
+
+                                $zip->close();
+                                $response = new BinaryFileResponse($tmpFileName);                    
+                                //$response->headers->set('Content-Type', $content->getContentType());     
+                                $response->headers->set('Content-Type', 'application/application/zip');
+                                $response->headers->set('Content-Disposition', "attachment; filename=QTI-archive-Q-Open.zip");           
+
+
+                                return $response;    
                    
 
-                    break;
+                
             }
         }
     }
