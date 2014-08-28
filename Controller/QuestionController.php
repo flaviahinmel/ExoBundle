@@ -2989,15 +2989,6 @@ class QuestionController extends Controller
                                 $outcomeDeclaration->appendChild($defaultValue);
 
 
-                
-                
-
-                                $node->appendChild($outcomeDeclaration);
-
-                                $outcomeDeclaration = $document->createElement("outcomeDeclaration");
-                                $outcomeDeclaration->setAttribute("identifier", "SCORE");
-                                $outcomeDeclaration->setAttribute("cardinality", "single");
-                                $outcomeDeclaration->setAttribute("baseType", "float");
                                 $node->appendChild($outcomeDeclaration);
 
                                 //add tag <itemBody>... to <assessmentItem>
@@ -3187,25 +3178,32 @@ class QuestionController extends Controller
                                                 $correctchoices->add($valeur);
                                                 //$rst =$rst."--------value : ".$valeur."\n";
                                             }
+                                            if($element->getElementsByTagName("outcomeDeclaration")->item(0)){
+                                                $nodeList=$element->getElementsByTagName("outcomeDeclaration");
+                                                $responseDeclaration=($nodeList->item(0));
+                                                $nodeList2=$responseDeclaration->getElementsByTagName("defaultValue");
+                                                $correctResponse=$nodeList2->item(0);
+                                                $nodelist3 = $correctResponse->getElementsByTagName("value");
 
-                                            $nodeList=$element->getElementsByTagName("outcomeDeclaration");
-                                            $responseDeclaration=($nodeList->item(0));
-                                            $nodeList2=$responseDeclaration->getElementsByTagName("defaultValue");
-                                            $correctResponse=$nodeList2->item(0);
-                                            $nodelist3 = $correctResponse->getElementsByTagName("value");
-
-                                            foreach($nodelist3 as $score)  
-                                            {
-                                                $valeur = $score->nodeValue."\n";
-                                                $rst =$rst."--------score : ".$valeur."\n";
+                                                foreach($nodelist3 as $score)  
+                                                {
+                                                    $valeur = $score->nodeValue."\n";
+                                                    $rst =$rst."--------score : ".$valeur."\n";
+                                                }
                                             }
+                                            
 
                                             $nodeList=$element->getElementsByTagName("itemBody");
                                             $itemBody=($nodeList->item(0));
                                             $nodeList2=$itemBody->getElementsByTagName("choiceInteraction");
                                             $choiceInteraction=$nodeList2->item(0);
                                             //question
-                                            $prompt = $choiceInteraction->getElementsByTagName("prompt")->item(0)->nodeValue;
+                                            $prompt=null;
+                                            if($choiceInteraction->getElementsByTagName("prompt")->item(0)){
+                                                $prompt = $choiceInteraction->getElementsByTagName("prompt")->item(0)->nodeValue;
+                                            }else{
+                                                $prompt= $title;
+                                            }
                                             //$rst =$rst."--------prompt : ".$prompt."\n";
 
 
@@ -3217,23 +3215,28 @@ class QuestionController extends Controller
                                             $identifier_choices = new \Doctrine\Common\Collections\ArrayCollection;
 
                                             $nodeList3=$choiceInteraction->getElementsByTagName("simpleChoice");
-                                           
+                                            $rst="";
                                             foreach($nodeList3 as $simpleChoice)  
                                             {
-                                                $choices->add($simpleChoice->nodeValue);
-                                                $identifier_choices->add($simpleChoice->getAttribute("identifier"));
+                                                
                                                 if($simpleChoice->getElementsByTagName("feedbackInline")->item(0)){
                                                      $feedbackInline = $simpleChoice->getElementsByTagName("feedbackInline")->item(0)->nodeValue;
+                                                     $feedback = $simpleChoice->getElementsByTagName("feedbackInline")->item(0);
+                                                     $choicestest= $simpleChoice->removeChild($feedback);
                                                      $commentsperline->add($feedbackInline);
                                                 }
-                                               
-                                                    
-                                                
-                                                //$rst =$rst."--------Choice : ".$valeur."\n";
-                                                //$identifier = 
+                                                $choices->add($simpleChoice->nodeValue);
+                                                $identifier_choices->add($simpleChoice->getAttribute("identifier"));
+                                                 
+                                                //test
+                                                //$feedback= $simpleChoice->getElementsByTagName("feedbackInline")->item(0);
+                                                $rst =$rst."--_-_-_-_---removetst----Choice : ".$simpleChoice->nodeValue ."\n";
+                                                //$rst =$rst."-_-_-removetst-end_-_-"; 
+                                                // $feedbackInline = $feedback->nodeValue;
+                                                //$rst =$rst."--_-_-_-_---removetst----feedback : ".$feedbackInline."\n";
                                                 //$rst =$rst."--------identifier ".$identifier."\n";
                                             }
-
+                                               
 
                                             //add the question o the database : 
 
@@ -3269,7 +3272,9 @@ class QuestionController extends Controller
                                             //Interaction
 
                                             $interaction->setType('InteractionQCM');
-                                            $interaction->setInvite($prompt);
+                                            if($prompt!=null){
+                                                 $interaction->setInvite($prompt);
+                                            }
                                             $interaction->setQuestion($question);
                                             if($modalfeedback!=null){
                                                 if(($modalfeedback->item(0)->nodeValue != null) && ($modalfeedback->item(0)->nodeValue != "")){
@@ -3524,8 +3529,9 @@ class QuestionController extends Controller
                                             $nodeList2=$itemBody->getElementsByTagName("choiceInteraction");
                                             $choiceInteraction=$nodeList2->item(0);
                                             //question
-                                            $prompt = $choiceInteraction->getElementsByTagName("prompt")->item(0)->nodeValue;
-                                            //change the src of the image :by using this path with integrating the resourceIdNode "/Claroline/web/app_dev.php/file/resource/media/5"
+                                            if($choiceInteraction->getElementsByTagName("prompt")->item(0)){
+                                                $prompt = $choiceInteraction->getElementsByTagName("prompt")->item(0)->nodeValue;
+                                                //change the src of the image :by using this path with integrating the resourceIdNode "/Claroline/web/app_dev.php/file/resource/media/5"
                                                             $dom2 = new \DOMDocument();                  
                                                             $dom2->loadHTML(html_entity_decode($prompt));
                                                             $listeimgs = $dom2->getElementsByTagName("img");
@@ -3540,6 +3546,9 @@ class QuestionController extends Controller
                                                             $res_prompt = $dom2->saveHTML();       
                                                            // echo htmlentities($res);
                                             //$rst =$rst."--------prompt : ".$prompt."\n";
+                                            }else{
+                                                $res_prompt= $title;
+                                            }
 
 
 
@@ -3773,6 +3782,94 @@ class QuestionController extends Controller
                                         $em->flush();
                                         
                                     
+                                }else if($typeqcm=="extendedText"){
+                                           
+                                        $responsedaclr = $element->getElementsByTagName("responseDeclaration");
+                                        //$responsedaclr = $elements->item(0);
+                                        $nodelist = $responsedaclr->item(0);
+                                        //$correctresponse = $nodelist->getElementsByTagName("correctResponse");
+                
+                                        //echo $correctresponse->nodeValue;
+                                        //$valeur = $nodelist->getElementByTagName("value"); 
+                                        $outcomeDeclaration=$element->getElementsByTagName("outcomeDeclaration");
+                                        $defaultValue =$outcomeDeclaration->item(0)->getElementsByTagName("defaultValue");
+                                        $value =$defaultValue->item(0)->getAttribute("value");
+                                        
+                
+                                        
+                                        $itemBody= $element->getElementsByTagName("itemBody");
+                
+                                        $modalfeedback=null;
+                                        if($element->getElementsByTagName("modalFeedback")->item(0)){
+
+                                            $modalfeedback=$element->getElementsByTagName("modalFeedback");
+                                        }
+                
+      
+                                        
+                                        $question  = new Question();
+                                        $Category = new Category();
+                                        $interaction =new Interaction();
+                                        $InteractionOpen =new InteractionOpen();
+                
+                
+                                        
+                                        $InteractionOpen->setOrthographyCorrect(0);
+                                        
+                                        $question->setTitle($title);
+                                        $Category_import = $this->getDoctrine()
+                                                                 ->getManager()
+                                                                 ->getRepository('UJMExoBundle:Category')->findBy(array('value' => "import"));
+                                            
+                                        if(count($Category_import)==0){
+                                            $Category->setValue("import");
+                                            $Category->setUser($this->container->get('security.context')->getToken()->getUser());
+                                            $question->setCategory($Category); 
+                                        }else{
+                                            $question->setCategory($Category_import[0]);
+                                        }
+                                        
+                                        $question->setUser($this->container->get('security.context')->getToken()->getUser());
+                                        $date = new \Datetime();
+                                        $question->setDateCreate(new \Datetime());
+
+
+
+                                        $interaction->setType('InteractionOpen');
+                                        //strip_tags($res_prompt,'<img><a><p><table>')
+                                        
+                                        $interaction->setInvite(($itemBody->item(0)->nodeValue));
+                                        $interaction->setQuestion($question);
+                                        $interaction->setFeedBack($modalfeedback->item(0)->nodeValue);
+                
+                                        
+                                        $user= $this->container->get('security.context')->getToken()->getUser();                                        
+                
+                                        
+                                        $InteractionOpen->setInteraction($interaction);
+                
+                                              
+                                        $em = $this->getDoctrine()->getManager();  
+                                          
+                                        $em->persist($InteractionOpen);
+                                        $em->persist($question);
+                                        $em->persist($interaction);
+                                        
+                                        if(count($Category_import)==0){
+                                            $em->persist($Category); 
+                                        }
+                                        
+                                        $em->flush();
+                                        
+                
+                                }else if($typeqcm=="entrytext"){
+                                           
+                                    
+                                    
+                                    
+                                                //import entrytext question "Question à trou"
+                                    
+                                    
                                 }
                     
                     
@@ -3801,12 +3898,32 @@ class QuestionController extends Controller
                 }   return $this->render('UJMExoBundle:Question:index.html.twig');
                    
                 */
-                  return $this->render(
-                        'UJMExoBundle:Question:ListQuestions.html.twig', array(
-                        'rst' => $rst,
-                        )
-                    ); 
                  
+                $this->removeDirectory("/var/www/Claroline/web/uploadfiles");
+                return $this->render(
+                      'UJMExoBundle:Question:ListQuestions.html.twig', array(
+                      'rst' => $rst,
+                      )
+                ); 
+                  
                   
     }
+        //suppression les dossiers uploader 
+        //All Files	/var/www/Claroline/web/uploadfiles
+        public function removeDirectory($directory){
+                if(!is_dir($directory)){
+                    throw new $this->createNotFoundException($directory.' is not directory '.__LINE__.', file '.__FILE__);
+                }
+                    $iterator = new \DirectoryIterator($directory);
+                        foreach ($iterator as $fileinfo) {
+
+                            if (!$fileinfo->isDot()) {
+                                if($fileinfo->isFile()) {
+                                    unlink($directory."/".$fileinfo->getFileName());
+                                    
+                                }
+                            }
+                        }//end foreach
+                    //rmdir($directory);
+        } 
 }
