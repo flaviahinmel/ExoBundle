@@ -87,4 +87,31 @@ function displayDeleteCategory() {
     }
 }
 
+function displayGeneralFeatures() {
+    if ($('#generalFeatures').css("display") == 'none')
+    {
+        $('#generalFeatures').css({"display" : "inline-block"});
+    } else {
+        $('#generalFeatures').css({"display" : "none"});
+    }
+}
+
+function displaySpecificFeatures() {
+    if ($('#specificFeatures').css("display") == 'none')
+    {
+        $('#specificFeatures').css({"display" : "inline-block"});
+    } else {
+        $('#specificFeatures').css({"display" : "none"});
+    }
+}
+
+function displayModelFeatures() {
+    if ($('#modelFeatures').css("display") == 'none')
+    {
+        $('#modelFeatures').css({"display" : "inline-block"});
+    } else {
+        $('#modelFeatures').css({"display" : "none"});
+    }
+}
+
 displayDeleteCategory();

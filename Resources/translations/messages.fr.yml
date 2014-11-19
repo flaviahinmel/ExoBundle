@@ -122,6 +122,7 @@ deleteProposal: Supprimer la proposition
 description: Description
 displayAllList: Afficher la liste complète
 display all on this page: Tout afficher sur cette page
+display hide parameters: Afficher/Masquer les paramètres
 display pagination: Afficher la pagination
 docimology: Docimologie
 docManage: Gestion de mes documents
@@ -169,7 +170,9 @@ frequency: Fréquence
 from: A partir du
 
 # G
+general parameters: Paramètres généraux
 graphic: Graphique
+graphic parameters: Paramètres question graphique
 group: Groupe
 
 # H
@@ -184,6 +187,7 @@ histoSuccess: Histogramme de réussite
 hole: Blancs
 hole creation: Création d'une question à trous
 hole edition: Edition d'une question à trous
+hole parameters: Paramètres question à trous
 home exercise: Accueil de l'exercice
 
 # I
@@ -240,9 +244,11 @@ mark this question: Noter cette question
 markTooBigest: La note doit être inférieure ou égale à
 matching: Association
 matching creation: Création d'une question associative
+matching parameters: Paramètres question associative
 maximum number of tries: Nombre d'essai maximum
 meaningMeasureDifficulty: Si l'indice est élevé, c'est que la question est facile ; Inversement, si un indice est faible, la question est difficile
 model: Modèle
+model parameters: Paramètres pour créer un modèle
 moreInformation: Plus d'informations
 multiple response: Réponse multiples
 my account: Mon compte
@@ -297,6 +303,7 @@ only owner category: Seul le propriétaire peut changer la catégorie
 only owner graphic: Seul le propriétaire peut changer l'image
 open: Ouverte
 open edition: Edition d'une question de type Ouverte
+open parameters: Paramètres question ouverte
 order: Ordre
 orders: Consignes
 
@@ -327,6 +334,7 @@ publish: Publier
 qcm: QCM
 qcm creation: Création d'une question de type QCM
 qcm edition: Edition d'une question de type QCM
+qcm parameters: Paramètres du QCM
 question: Question
 questions: Questions
 question graphic: Question Graphique

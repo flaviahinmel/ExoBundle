@@ -1,4 +1,10 @@
-<div>
+<br>
+<a id="displayspecificFeatures" class="btn btn" 
+   title="{{ "display hide parameters" | trans }}" onclick="displaySpecificFeatures();">
+    <i class="fa fa-edit"></i> {{ 'open parameters' | trans }}
+</a><hr>
+
+<div id="specificFeatures" style="display: none;width: 100%;">
     {{ form_row(form.typeopenquestion) }}
 
     <div id="qOpenScoreMaxLongResp">
@@ -29,4 +35,5 @@
             {{ form_row(form.wordResponses) }}
         </p>
     </div>
+    <hr>
 </div>

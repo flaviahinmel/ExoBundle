@@ -122,6 +122,7 @@ deleteProposal: Supprimer la proposition
 description: Description
 displayAllList: Display the whole list
 display all on this page: Display all on this page
+display hide parameters: Display/Hide the parameters
 display pagination: Display with pagination
 docimology: Docimology
 docManage: Manage my documents
@@ -169,7 +170,9 @@ frequency: Frequency
 from: From
 
 # G
+general parameters: General parameters
 graphic: Graphic
+graphic parameters: Parameters question with holes
 group: Group
 
 # H
@@ -184,6 +187,7 @@ histoSuccess: Success' histogram
 hole: Hole
 hole creation: Creation of a question with holes
 hole edition: Edition of a question with holes
+hole parameters: Parameters question with holes
 home exercise: Home exercise
 
 # I
@@ -241,8 +245,10 @@ markTooBigest: The mark must be less than or equal to
 matching: Association
 matching creation: Creation of a question of type association
 maximum number of tries: Maximum number of tries
+matching parameters: Parameters matching question
 meaningMeasureDifficulty: If the measure is hight, the question is easy ; In return, if the measure is low, the question is difficult
 model: Model
+model parameters: Parameters to create a model
 moreInformation: More information
 multiple response: Multiple response
 my account: My account
@@ -297,6 +303,7 @@ only owner category: Only the owner can change the category
 only owner graphic: Only the owner can change the picture
 open: Open
 open edition: Edition of a question of type open
+open parameters: Parameters open question
 order: Order
 orders: Instructions
 
@@ -327,6 +334,7 @@ publish: Publish
 qcm: QCM
 qcm creation: Creation of a question of type QCM
 qcm edition: Edition of a question of type QCM
+qcm parameters: QCM parameters
 question: Question
 questions: Questions
 question graphic: Graphic Question

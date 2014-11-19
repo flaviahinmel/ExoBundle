@@ -1,0 +1,9 @@
+<br>
+<a id="displayModelFeatures" class="btn btn" onclick="displayModelFeatures();">
+    <i class="fa fa-edit"></i> {{ 'model parameters' | trans }}
+</a>
+
+<div id="modelFeatures" style="display: none;width: 100%;">
+    {% include "UJMExoBundle:Partial:model.html.twig" %}
+    {% include "UJMExoBundle:Partial:cloneInterCreation.html.twig" %}
+</div>
