@@ -1,3 +1,70 @@
+{% set layout = "ClarolineCoreBundle:Workspace:layout.html.twig" %}
+
+{% if isDesktop() %}
+    {% set layout = "ClarolineCoreBundle:Desktop:layout.html.twig" %}
+    {% block breadcrumb %}
+        {{
+            macros.breadcrumbs([
+                {
+                    'icon': 'fa fa-briefcase',
+                    'name': 'desktop'|trans({}, 'platform'),
+                    'href': path('claro_desktop_open')
+                },
+                {
+                    'name': 'question creation' | trans,
+                    'href': ''
+                }
+            ])
+        }}
+    {% endblock %}
+{% endif %}
+
+{% extends layout %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link href="{{ asset('bundles/ujmexo/css/tableLayout.css') }}" type="text/css" rel="stylesheet"/>
+{% endblock %}
+
+{% block title %} {{ 'question creation' | trans }} {% endblock %}
+
+{% if _resource is defined %}
+    {% block resourceBreadcrumb %}
+        <li><a href="{{ path('claro_resource_open', { 'resourceType': _resource.resourceNode.resourceType.name(), 'node': _resource.resourceNode.id }) }}">{{ _resource.getResourceNode().getName() }}</a></li>
+        <li><a href="{{ path('ujm_exercise_questions', { 'id': exoID }) }}">{{ 'my questions' | trans }}</a></li>
+        <li class="active">{{ 'question creation' | trans }}</li>
+    {% endblock %}
+{% endif %}
+
+{% block section_content %}
+
+    {% set al = '' %}
+
+    {% for key,value in linkedCategory %}
+        {% set al = al ~ key ~ '/' ~ value ~ ';' %}
+    {% endfor %}
+
+    <input type="hidden" id="categoryArray" value="{{al}}"/>
+
+    <div class="panel-heading">
+        <h3 class="panel-title">{{ 'question creation' | trans }}</h3>
+    </div>
+    <div class="panel-body">
+        {% if exoID == -1 %}
+            <a class="btn btn-primary" href="{{ path('ujm_question_index') }}">
+                <i class="fa fa-arrow-left"></i> {{ 'back to the list' | trans }}
+            </a>
+        {% else %}
+            <a class="btn btn-primary" href="{{ path('ujm_exercise_questions', { 'id': exoID }) }}">
+                <i class="fa fa-arrow-left"></i> {{ 'back' | trans }}
+            </a>
+        {% endif %}
+    </div>
+ 
+    
+    
+    
+    
 <link href="{{ asset('bundles/ujmexo/css/tableLayout.css') }}" type="text/css" rel="stylesheet"/>
 
 <div class="panel panel-default">
@@ -49,3 +116,14 @@
     newHint('{{ 'hint' | trans }}', '{{ 'penalty' | trans }}', '{{ 'add hint' | trans }}', '{{ 'delete' | trans }}');
     </script>
 {% endif %}
+    
+    
+    
+    
+    
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script type="text/javascript" src="{{ asset('bundles/ujmexo/js/question.js') }}"></script>
+{% endblock %}

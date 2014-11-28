@@ -392,7 +392,7 @@ class QuestionController extends Controller
             $variables['_resource'] = $exercise;
         }
 
-        return $this->render('UJMExoBundle:Question:new.html.twig', $variables);
+        return $this->render('UJMExoBundle:Question:modalNewQuestion.html.twig', $variables);
     }
 
     /**
@@ -794,11 +794,12 @@ class QuestionController extends Controller
         $services = $this->container->get('ujm.exercise_services');
         $request = $this->container->get('request');
 
-        if ($request->isXmlHttpRequest()) {
+        //if ($request->isXmlHttpRequest()) {
             $valType = 0;
 
-            $valType = $request->request->get('indice_type');
-            $exoID = $request->request->get('exercise');
+            $valType = $request->request->get('menu_type_question');
+            $exoID = $request->request->get('exoID');
+            $linkedCategory = $request->request->get('linkedCategory');
 
             if ($valType != 0) {
                 //index 1 = Hole Question
@@ -815,6 +816,7 @@ class QuestionController extends Controller
                         'UJMExoBundle:InteractionHole:new.html.twig', array(
                         'exoID'  => $exoID,
                         'entity' => $entity,
+                        'linkedCategory' => $linkedCategory,
                         'form'   => $form->createView()
                         )
                     );
@@ -904,7 +906,7 @@ class QuestionController extends Controller
                     );
                 }
             }
-        }
+        //}
     }
 
     /**
