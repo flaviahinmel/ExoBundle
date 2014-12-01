@@ -38,11 +38,7 @@
 
 {% block section_content %}
 
-    {% set al = '' %}
-
-    {% for key,value in linkedCategory %}
-        {% set al = al ~ key ~ '/' ~ value ~ ';' %}
-    {% endfor %}
+    {% set al = linkedCategory %}
 
     <input type="hidden" id="categoryArray" value="{{al}}"/>
 
