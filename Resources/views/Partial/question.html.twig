@@ -1,9 +1,9 @@
-<a id="displayGeneralFeatures" class="btn btn" 
-   title="{{ "display hide parameters" | trans }}" onclick="displayGeneralFeatures();">
+<a class="btn btn" data-toggle="collapse" data-target="#generalFeatures"
+   title="{{ "display hide parameters" | trans }}" >
     <i class="fa fa-edit"></i> {{ 'general parameters' | trans }}
 </a>
 <br><hr>
-<div id="generalFeatures" style="display: none;width: 100%;">
+<div id="generalFeatures" class="list-group collapse">
     <div class="form-group row">
         {{ form_label(form.interaction.question.title) }}
         <div class="col-md-9">{{ form_widget(form.interaction.question.title) }}</div>
@@ -27,45 +27,20 @@
     <br><hr><br>
 
     <div>
-        <a class="btn btn-primary" data-toggle="collapse" data-target="#collepsedescription">
-            <i class="fa fa-pencil"></i> {{ 'Question.description' | trans }}
-        </a>
-        <div id="collepsedescription" class="list-group collapse">
-            <div class="list-group-item">{{ form_widget(form.interaction.question.description) }}</div>
-        </div>
-    </div>
-
-    <br><hr><br>
-
-    <div>
         <label class="control-label col-md-3">{{ 'question' | trans }}</label>
         <br><br>
         {{ form_widget(form.interaction.invite) }}
-    </div>
-
-    <br><hr><br>
-
-    <div>
-        <a class="btn btn-primary" data-toggle="collapse" data-target="#collepseinteraction">
-            <i class="fa fa-pencil"></i> {{ 'Interaction.feedback' | trans }}
+        <a class="btn btn col-md-offset-10" data-toggle="collapse" data-target="#generalFeatures"
+            title="{{ "display hide parameters" | trans }}" >
+             <i class="fa fa-eye-slash"></i> {{ 'mask' | trans }}
         </a>
-        <div id="collepseinteraction" class="list-group collapse">
-            <div class="list-group-item">{{ form_widget(form.interaction.feedBack) }}</div>
-        </div>
-    </div>
-
-    <br><hr><br>
-
-    <div id="divHint" class="panel-body">
-        <div id="hintError"></div>
-        <div id="tableHint"></div>
-        {{ form_widget(form.interaction.hints) }}
-        {{ form_errors(form.interaction.hints) }}
     </div>
 
     <br><hr><br>
 
     <input type="hidden" id="pathDrop" value="{{ path('ujm_category_drop') }}"/>
 </div>
+
+{% include "UJMExoBundle:Partial:question/questionOptionalParameters.html.twig" %}
 
 <script type="text/javascript" src="{{ asset('bundles/ujmexo/js/allQuestionsType.js') }}"></script>

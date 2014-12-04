@@ -304,6 +304,7 @@ only owner graphic: Only the owner can change the picture
 open: Open
 open edition: Edition of a question of type open
 open parameters: Parameters open question
+optional parameters: Optional parameters
 order: Order
 orders: Instructions
 

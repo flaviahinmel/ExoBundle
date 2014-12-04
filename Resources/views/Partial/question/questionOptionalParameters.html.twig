@@ -1,0 +1,38 @@
+<a class="btn btn" data-toggle="collapse" data-target="#collepseOptional">
+    <i class="fa fa-edit"></i> {{ 'optional parameters' | trans }}
+</a>
+
+<div id="collepseOptional" class="col-md-offset-2 list-group collapse">
+
+    <div>
+        <a class="btn btn" data-toggle="collapse" data-target="#collepsedescription">
+            <i class="fa fa-pencil"></i> {{ 'Question.description' | trans }}
+        </a>
+        <div id="collepsedescription" class="list-group collapse">
+            <div class="list-group-item">{{ form_widget(form.interaction.question.description) }}</div>
+        </div>
+    </div>
+
+    <div>
+        <a class="btn btn" data-toggle="collapse" data-target="#collepseinteraction">
+            <i class="fa fa-pencil"></i> {{ 'Interaction.feedback' | trans }}
+        </a>
+        <div id="collepseinteraction" class="list-group collapse">
+            <div class="list-group-item">{{ form_widget(form.interaction.feedBack) }}</div>
+        </div>
+    </div>
+
+    <div>
+        <a class="btn btn" data-toggle="collapse" data-target="#divHint">
+                <i class="fa fa-pencil"></i> {{ 'hint' | trans }}
+            </a>
+        <div id="divHint" class="list-group collapse">
+            <div id="hintError"></div>
+            <div id="tableHint"></div>
+            {{ form_widget(form.interaction.hints) }}
+            {{ form_errors(form.interaction.hints) }}
+        </div>
+    </div>
+</div>
+
+<br><hr>

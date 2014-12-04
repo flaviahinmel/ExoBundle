@@ -87,15 +87,6 @@ function displayDeleteCategory() {
     }
 }
 
-function displayGeneralFeatures() {
-    if ($('#generalFeatures').css("display") == 'none')
-    {
-        $('#generalFeatures').css({"display" : "inline-block"});
-    } else {
-        $('#generalFeatures').css({"display" : "none"});
-    }
-}
-
 function displaySpecificFeatures() {
     if ($('#specificFeatures').css("display") == 'none')
     {
