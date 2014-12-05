@@ -1,10 +1,9 @@
-<br>
-<a id="displayspecificFeatures" class="btn btn" 
-   title="{{ "display hide parameters" | trans }}" onclick="displaySpecificFeatures();">
+<a id="displayspecificFeatures" class="btn btn" data-toggle="collapse" data-target="#specificFeatures"
+   title="{{ "display hide parameters" | trans }}">
     <i class="fa fa-edit"></i> {{ 'matching parameters' | trans }}
 </a><hr>
 
-<div id="specificFeatures" style="display: none;width: 100%;">
+<div id="specificFeatures" class="list-group collapse">
     <div id="Instructions" class="alert alert-info">
         <a class="close" onclick="HideInstruction();">&times;</a>
         <p>{{ 'instruction matching' | trans }}</p>
@@ -37,5 +36,9 @@
                 </tr>
             </table>
     </div>
+    <a class="btn btn col-md-offset-10" data-toggle="collapse" data-target="#specificFeatures"
+        title="{{ "display hide parameters" | trans }}" >
+         <i class="fa fa-eye-slash"></i> {{ 'mask' | trans }}
+    </a>
     <hr>
 </div>

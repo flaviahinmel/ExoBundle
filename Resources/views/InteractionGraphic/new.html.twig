@@ -1,54 +1,61 @@
-<link href="{{ asset('bundles/ujmexo/css/tableLayout.css') }}" type="text/css" rel="stylesheet"/>
-<link rel="stylesheet" href="{{ asset('bundles/ujmexo/js/ext/jquery-ui-smoothness.css') }}"/>
+{% extends "UJMExoBundle:Partial:question/headNewQuestion.html.twig" %}
 
-<div class="panel panel-default">
-    <div class="panel-heading">
-        <h3 class="panel-title">{{ 'interactionGraphic creation' | trans }}</h3>
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('bundles/ujmexo/js/ext/jquery-ui-smoothness.css') }}"/>
+{% endblock %}
+    
+{% block section_content %}
+    {{ parent() }}
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h3 class="panel-title">{{ 'interactionGraphic creation' | trans }}</h3>
+        </div>
+
+        <form name="InterGraphForm" id="InterGraphForm" onsubmit="return Check('{{ 'noTitle' | trans }}', '{{ 'noQuestion' | trans }} ...',
+            '{{ 'noImg' | trans }} !', '{{ 'noAnswerZone' | trans }} ...', '{{ form.interaction.question.title.vars.id }}',
+            '{{ form.interaction.invite.vars.id }}');" action="{{ path('ujm_interactiongraphic_create') }}" method="post" {{ form_enctype(form) }}>
+
+            <div class="panel-body">
+                {% set src = 'new' %}
+
+                {% include "UJMExoBundle:Partial:question.html.twig" %}
+                {% include "UJMExoBundle:Partial:interactions/graphic.html.twig" %}
+                {% include "UJMExoBundle:Partial:interactions/endCreate.html.twig" %}
+                {% include "UJMExoBundle:Partial:restform.html.twig" %}
+            </div>
+
+            <div class="panel-footer">
+                <button type="submit"  id="button_submit" class="btn btn-primary">{{ 'create' | trans }}</button>
+            </div>
+        </form>
     </div>
 
-    <form name="InterGraphForm" id="InterGraphForm" onsubmit="return Check('{{ 'noTitle' | trans }}', '{{ 'noQuestion' | trans }} ...',
-        '{{ 'noImg' | trans }} !', '{{ 'noAnswerZone' | trans }} ...', '{{ form.interaction.question.title.vars.id }}',
-        '{{ form.interaction.invite.vars.id }}');" action="{{ path('ujm_interactiongraphic_create') }}" method="post" {{ form_enctype(form) }}>
+    <script type="text/javascript" src="{{ asset('bundles/ujmexo/js/hint.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('bundles/ujmexo/js/category_pop.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('bundles/frontend/jquery/jquery-ui-1.9.2/jquery-ui-1.9.2.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('bundles/ujmexo/js/ext/jquery-ui-touch-punch.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('bundles/ujmexo/js/instructions.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('bundles/ujmexo/js/graphic.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('bundles/ujmexo/js/ext/malsup.js') }}"></script>
 
-        <div class="panel-body">
-            {% set src = 'new' %}
+    {# ---------------------------------------------- Javascript ------------------------------------------------------- #}
 
-            {% include "UJMExoBundle:Partial:question.html.twig" %}
-            {% include "UJMExoBundle:Partial:interactions/graphic.html.twig" %}
-            {% include "UJMExoBundle:Partial:interactions/endCreate.html.twig" %}
-            {% include "UJMExoBundle:Partial:restform.html.twig" %}
-        </div>
+    {% if error is defined %}
+        <script type="text/javascript">
+            newHintEdit('{{ 'hint' | trans }}', '{{ 'penalty' | trans }}', '{{ 'add hint' | trans }}', '{{ 'delete' | trans }}');
+        </script>
+    {% else %}
+        <script type="text/javascript">
+            newHint('{{ 'hint' | trans }}', '{{ 'penalty' | trans }}', '{{ 'add hint' | trans }}', '{{ 'delete' | trans }}');
+        </script>
 
-        <div class="panel-footer">
-            <button type="submit"  id="button_submit" class="btn btn-primary">{{ 'create' | trans }}</button>
-        </div>
-    </form>
-</div>
-
-<script type="text/javascript" src="{{ asset('bundles/ujmexo/js/hint.js') }}"></script>
-<script type="text/javascript" src="{{ asset('bundles/ujmexo/js/category_pop.js') }}"></script>
-<script type="text/javascript" src="{{ asset('bundles/frontend/jquery/jquery-ui-1.9.2/jquery-ui-1.9.2.js') }}"></script>
-<script type="text/javascript" src="{{ asset('bundles/ujmexo/js/ext/jquery-ui-touch-punch.js') }}"></script>
-<script type="text/javascript" src="{{ asset('bundles/ujmexo/js/instructions.js') }}"></script>
-<script type="text/javascript" src="{{ asset('bundles/ujmexo/js/graphic.js') }}"></script>
-<script type="text/javascript" src="{{ asset('bundles/ujmexo/js/ext/malsup.js') }}"></script>
-
-{# ---------------------------------------------- Javascript ------------------------------------------------------- #}
-
-{% if error is defined %}
-    <script type="text/javascript">
-        newHintEdit('{{ 'hint' | trans }}', '{{ 'penalty' | trans }}', '{{ 'add hint' | trans }}', '{{ 'delete' | trans }}');
-    </script>
-{% else %}
-    <script type="text/javascript">
-        newHint('{{ 'hint' | trans }}', '{{ 'penalty' | trans }}', '{{ 'add hint' | trans }}', '{{ 'delete' | trans }}');
-    </script>
-
-    <script type="text/javascript">
-        var translations = {
-            'tradWrongPoint' : '{{ 'wrongPoint' | trans }}',
-            'tradCircle' : '{{ 'cercle' | trans }}',
-            'tradSquare' : '{{ 'square' | trans }}'
-        }
-    </script>
-{% endif %}
+        <script type="text/javascript">
+            var translations = {
+                'tradWrongPoint' : '{{ 'wrongPoint' | trans }}',
+                'tradCircle' : '{{ 'cercle' | trans }}',
+                'tradSquare' : '{{ 'square' | trans }}'
+            }
+        </script>
+    {% endif %}
+{% endblock %}

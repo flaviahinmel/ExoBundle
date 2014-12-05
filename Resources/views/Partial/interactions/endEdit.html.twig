@@ -1,8 +1,8 @@
 <br>
-<a id="displayModelFeatures" class="btn btn" onclick="displayModelFeatures();">
+<a id="displayModelFeatures" class="btn btn" data-toggle="collapse" data-target="#modelFeatures">
     <i class="fa fa-edit"></i> {{ 'model parameters' | trans }}
 </a>
 
-<div id="modelFeatures" style="display: none;width: 100%;">
+<div id="modelFeatures" class="list-group collapse">
     {% include "UJMExoBundle:Partial:model.html.twig" %}
 </div>

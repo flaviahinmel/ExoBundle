@@ -87,22 +87,4 @@ function displayDeleteCategory() {
     }
 }
 
-function displaySpecificFeatures() {
-    if ($('#specificFeatures').css("display") == 'none')
-    {
-        $('#specificFeatures').css({"display" : "inline-block"});
-    } else {
-        $('#specificFeatures').css({"display" : "none"});
-    }
-}
-
-function displayModelFeatures() {
-    if ($('#modelFeatures').css("display") == 'none')
-    {
-        $('#modelFeatures').css({"display" : "inline-block"});
-    } else {
-        $('#modelFeatures').css({"display" : "none"});
-    }
-}
-
 displayDeleteCategory();

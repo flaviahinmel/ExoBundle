@@ -1,10 +1,9 @@
-<br>
-<a id="displayspecificFeatures" class="btn btn" 
-   title="{{ "display hide parameters" | trans }}" onclick="displaySpecificFeatures();">
+<a id="displayspecificFeatures" class="btn btn" data-toggle="collapse" data-target="#specificFeatures"
+   title="{{ "display hide parameters" | trans }}">
     <i class="fa fa-edit"></i> {{ 'qcm parameters' | trans }}
 </a><hr>
 
-<div id="specificFeatures" style="display: none;width: 100%;">
+<div id="specificFeatures" class="list-group collapse">
     <div>
         <div class="form-group row">
             {{ form_label(form.scoreRightResponse) }}
@@ -35,5 +34,9 @@
          {{ form_row(form.choices) | replace({"col-md-3": "col-md-12"}) | raw }}
          {{ form_errors(form.choices) }}
     </div>
+    <a class="btn btn col-md-offset-10" data-toggle="collapse" data-target="#specificFeatures"
+        title="{{ "display hide parameters" | trans }}" >
+         <i class="fa fa-eye-slash"></i> {{ 'mask' | trans }}
+    </a>
     <hr>
 </div>

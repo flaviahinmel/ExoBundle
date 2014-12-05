@@ -1,9 +1,8 @@
-<br>
-<a id="displayspecificFeatures" class="btn btn" onclick="displaySpecificFeatures();">
+<a id="displayspecificFeatures" class="btn btn" data-toggle="collapse" data-target="#specificFeatures">
     <i class="fa fa-edit"></i> {{ 'graphic parameters' | trans }}
 </a><hr>
 
-<div id="specificFeatures" style="display: none;width: 100%;">
+<div id="specificFeatures" class="list-group collapse">
     <label class="control-label col-md-3">{{ 'image' | trans }}</label>
 
     <br><br>
@@ -161,5 +160,9 @@
     <input class="form-control" type="hidden" name="exercise" value="{{ exoID }}"/>
 
     <input class="form-control" type="hidden" id="message" name="message" value="{{ 'inside' | trans }} ..."/>
+    <a class="btn btn col-md-offset-10" data-toggle="collapse" data-target="#specificFeatures"
+        title="{{ "display hide parameters" | trans }}" >
+         <i class="fa fa-eye-slash"></i> {{ 'mask' | trans }}
+    </a>
     <hr>
 </div>

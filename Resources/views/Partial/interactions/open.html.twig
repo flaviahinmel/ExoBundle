@@ -1,10 +1,9 @@
-<br>
-<a id="displayspecificFeatures" class="btn btn" 
-   title="{{ "display hide parameters" | trans }}" onclick="displaySpecificFeatures();">
+<a id="displayspecificFeatures" class="btn btn" data-toggle="collapse" data-target="#specificFeatures"
+   title="{{ "display hide parameters" | trans }}">
     <i class="fa fa-edit"></i> {{ 'open parameters' | trans }}
 </a><hr>
 
-<div id="specificFeatures" style="display: none;width: 100%;">
+<div id="specificFeatures" class="list-group collapse">
     {{ form_row(form.typeopenquestion) }}
 
     <div id="qOpenScoreMaxLongResp">
@@ -35,5 +34,9 @@
             {{ form_row(form.wordResponses) }}
         </p>
     </div>
+    <a class="btn btn col-md-offset-10" data-toggle="collapse" data-target="#specificFeatures"
+        title="{{ "display hide parameters" | trans }}" >
+         <i class="fa fa-eye-slash"></i> {{ 'mask' | trans }}
+    </a>
     <hr>
 </div>

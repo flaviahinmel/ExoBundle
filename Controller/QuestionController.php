@@ -838,6 +838,7 @@ class QuestionController extends Controller
                         'UJMExoBundle:InteractionQCM:new.html.twig', array(
                         'exoID'   => $exoID,
                         'entity'  => $entity,
+                        'linkedCategory' => $linkedCategory,
                         'typeQCM' => json_encode($typeQCM),
                         'form'    => $form->createView()
                         )
@@ -858,6 +859,7 @@ class QuestionController extends Controller
                         'UJMExoBundle:InteractionGraphic:new.html.twig', array(
                         'exoID'  => $exoID,
                         'entity' => $entity,
+                        'linkedCategory' => $linkedCategory,
                         'form'   => $form->createView()
                         )
                     );
@@ -879,6 +881,7 @@ class QuestionController extends Controller
                         'UJMExoBundle:InteractionOpen:new.html.twig', array(
                         'exoID'    => $exoID,
                         'entity'   => $entity,
+                        'linkedCategory' => $linkedCategory,
                         'typeOpen' => json_encode($typeOpen),
                         'form'     => $form->createView()
                         )
@@ -900,6 +903,7 @@ class QuestionController extends Controller
                         'UJMExoBundle:InteractionMatching:new.html.twig', array(
                         'exoID'    => $exoID,
                         'entity'   => $entity,
+                        'linkedCategory' => $linkedCategory,
                         'typeMatching' => json_encode($typeMatching),
                         'form'     => $form->createView()
                         )
